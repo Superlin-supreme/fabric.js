@@ -619,10 +619,10 @@
      * @param {fabric.Object} target
      */
     _setupCurrentTransform: function (e, target, alreadySelected) {
+      this._needsCurrentTransformSetup = false;
       if (!target) {
         return;
       }
-
       var pointer = this.getPointer(e), corner = target.__corner,
           control = target.controls[corner],
           actionHandler = (alreadySelected && corner) ?
