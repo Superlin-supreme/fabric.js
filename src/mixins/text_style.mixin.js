@@ -163,6 +163,7 @@
      * Returns 2d representation (lineIndex and charIndex) of cursor (or selection start)
      * @param {Number} [selectionStart] Optional index. When not given, current selectionStart is used.
      * @param {Boolean} [skipWrapping] consider the location for unwrapped lines. useful to manage styles.
+     * unwrapped lines 未包装的文本行？@todo
      */
     get2DCursorLocation: function(selectionStart, skipWrapping) {
       if (typeof selectionStart === 'undefined') {
@@ -190,7 +191,7 @@
      * if startIndex or endIndex are not provided, selectionStart or selectionEnd will be used.
      * @param {Number} [startIndex] Start index to get styles at
      * @param {Number} [endIndex] End index to get styles at, if not specified selectionEnd or startIndex + 1
-     * @param {Boolean} [complete] get full style or not
+     * @param {Boolean} [complete] get full style or not 是否获取所有的样式
      * @return {Array} styles an array with one, zero or more Style objects
      */
     getSelectionStyles: function(startIndex, endIndex, complete) {
@@ -246,6 +247,7 @@
 
     /**
      * get the reference, not a clone, of the style object for a given character
+     * 获取某个字符的样式
      * @param {Number} lineIndex
      * @param {Number} charIndex
      * @return {Object} style object
@@ -261,6 +263,7 @@
     /**
      * return a new object that contains all the style property for a character
      * the object returned is newly created
+     * 返回每个字符的所有样式
      * @param {Number} lineIndex of the line where the character is
      * @param {Number} charIndex position of the character on the line
      * @return {Object} style object

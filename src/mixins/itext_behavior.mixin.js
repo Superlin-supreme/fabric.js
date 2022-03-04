@@ -182,6 +182,7 @@
 
     /**
      * Returns selected text
+     * 获取选中的文本
      * @return {String}
      */
     getSelectedText: function() {

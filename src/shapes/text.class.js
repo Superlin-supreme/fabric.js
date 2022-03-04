@@ -102,6 +102,7 @@
 
     /**
      * Text decoration underline.
+     * 顶划线
      * @type Boolean
      * @default
      */
@@ -1514,6 +1515,7 @@
 
     /**
      * Returns the text as an array of lines.
+     * 将文字按换行符 \n 切成数组
      * @param {String} text text to split
      * @returns {Array} Lines in the text
      */
@@ -1523,10 +1525,11 @@
           newLine = ['\n'],
           newText = [];
       for (var i = 0; i < lines.length; i++) {
+        // 按语言编码取得该行文本
         newLines[i] = fabric.util.string.graphemeSplit(lines[i]);
         newText = newText.concat(newLines[i], newLine);
       }
-      newText.pop();
+      newText.pop(); // 把末尾的 \n 弹出来
       return { _unwrappedLines: newLines, lines: lines, graphemeText: newText, graphemeLines: newLines };
     },
 

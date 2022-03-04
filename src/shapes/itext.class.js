@@ -3,7 +3,7 @@
    * IText class (introduced in <b>v1.4</b>) Events are also fired with "text:"
    * prefix when observing canvas.
    * @class fabric.IText
-   * @extends fabric.Text
+   * @extends fabric.Text 继承 Text 类
    * @mixes fabric.Observable
    *
    * @fires changed
@@ -420,6 +420,7 @@
           boxEnd = isJustify && !this.isEndOfWrapping(i) ? this.width : this.getLineWidth(i) || 5; // WTF is this 5?
         }
         else if (i === endLine) {
+          // endline 在第一行
           if (endChar === 0) {
             boxEnd = this.__charBounds[endLine][endChar].left;
           }

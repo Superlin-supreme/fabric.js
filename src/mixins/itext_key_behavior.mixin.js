@@ -4,7 +4,9 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * Initializes hidden textarea (needed to bring up keyboard in iOS)
    */
   initHiddenTextarea: function() {
+    // 创建元素
     this.hiddenTextarea = fabric.document.createElement('textarea');
+    // 设置标签属性
     this.hiddenTextarea.setAttribute('autocapitalize', 'off');
     this.hiddenTextarea.setAttribute('autocorrect', 'off');
     this.hiddenTextarea.setAttribute('autocomplete', 'off');
@@ -14,6 +16,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     var style = this._calcTextareaPosition();
     // line-height: 1px; was removed from the style to fix this:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=870966
+    // 设置样式
     this.hiddenTextarea.style.cssText = 'position: absolute; top: ' + style.top +
     '; left: ' + style.left + '; z-index: -999; opacity: 0; width: 1px; height: 1px; font-size: 1px;' +
     ' paddingｰtop: ' + style.fontSize + ';';
@@ -25,6 +28,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       fabric.document.body.appendChild(this.hiddenTextarea);
     }
 
+    // 注册 textarea 事件监听
     fabric.util.addListener(this.hiddenTextarea, 'keydown', this.onKeyDown.bind(this));
     fabric.util.addListener(this.hiddenTextarea, 'keyup', this.onKeyUp.bind(this));
     fabric.util.addListener(this.hiddenTextarea, 'input', this.onInput.bind(this));
@@ -66,16 +70,16 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
   },
 
   keysMapRtl: {
-    9:  'exitEditing',
-    27: 'exitEditing',
-    33: 'moveCursorUp',
-    34: 'moveCursorDown',
-    35: 'moveCursorLeft',
-    36: 'moveCursorRight',
-    37: 'moveCursorRight',
-    38: 'moveCursorUp',
-    39: 'moveCursorLeft',
-    40: 'moveCursorDown',
+    9:  'exitEditing', // Tab key
+    27: 'exitEditing', // Escape key
+    33: 'moveCursorUp', // Page Up key
+    34: 'moveCursorDown', // Page Down key
+    35: 'moveCursorLeft', // End key
+    36: 'moveCursorRight', // Home key
+    37: 'moveCursorRight', // Left arrow
+    38: 'moveCursorUp', // Up arrow
+    39: 'moveCursorLeft', // Right arrow
+    40: 'moveCursorDown', // Down arrow
   },
 
   /**
@@ -90,7 +94,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * For functionalities on keyDown + ctrl || cmd
    */
   ctrlKeysMapDown: {
-    65: 'selectAll'
+    65: 'selectAll' // 按键 A
   },
 
   onClick: function() {
@@ -107,10 +111,13 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     if (!this.isEditing) {
       return;
     }
+    // 文本方向会影响光标移动
     var keyMap = this.direction === 'rtl' ? this.keysMapRtl : this.keysMap;
     if (e.keyCode in keyMap) {
+      // 触发对应功能键的事件
       this[keyMap[e.keyCode]](e);
     }
+    // 快捷键：选中全部 crtl + A / command + A
     else if ((e.keyCode in this.ctrlKeysMapDown) && (e.ctrlKey || e.metaKey)) {
       this[this.ctrlKeysMapDown[e.keyCode]](e);
     }
@@ -119,6 +126,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     }
     e.stopImmediatePropagation();
     e.preventDefault();
+    // 功能键：上下左右
     if (e.keyCode >= 33 && e.keyCode <= 40) {
       // if i press an arrow key just update selection
       this.inCompositionMode = false;
@@ -126,6 +134,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       this.renderCursorOrSelection();
     }
     else {
+      // 重绘画布
       this.canvas && this.canvas.requestRenderAll();
     }
   },
@@ -134,13 +143,19 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * Handles keyup event
    * We handle KeyUp because ie11 and edge have difficulties copy/pasting
    * if a copy/cut event fired, keyup is dismissed
+   * 因为 ie11 和 edge 在复制和剪切上有问题
+   * 如果复制和剪切事件触发了，keyup 处理取消
    * @param {Event} e Event object
    */
   onKeyUp: function(e) {
+    // 非编辑装填
+    // 正在编辑
+    // inCompositionMode
     if (!this.isEditing || this._copyDone || this.inCompositionMode) {
       this._copyDone = false;
       return;
     }
+    // 复制键 / 剪切键
     if ((e.keyCode in this.ctrlKeysMapUp) && (e.ctrlKey || e.metaKey)) {
       this[this.ctrlKeysMapUp[e.keyCode]](e);
     }
@@ -233,6 +248,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     }
     if (insertedText.length) {
       if (fromPaste && insertedText.join('') === fabric.copiedText && !fabric.disableStyleCopyPaste) {
+        // 把样式也复制了，牛
         copiedStyle = fabric.copiedTextStyle;
       }
       this.insertNewStyleBlock(insertedText, selectionStart, copiedStyle);
@@ -277,13 +293,17 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       return;
     }
 
+    // 获取选区中的文字
     fabric.copiedText = this.getSelectedText();
     if (!fabric.disableStyleCopyPaste) {
+      // 获取复制的字体样式
       fabric.copiedTextStyle = this.getSelectionStyles(this.selectionStart, this.selectionEnd, true);
     }
     else {
       fabric.copiedTextStyle = null;
     }
+
+    // 完成标记
     this._copyDone = true;
   },
 
