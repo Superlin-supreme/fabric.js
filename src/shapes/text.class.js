@@ -27,6 +27,7 @@
 
     /**
      * Properties which when set cause object to change dimensions
+     * 设置时会触发 object（是指 text）尺寸改变的属性，textbox 中多了一个 width
      * @type Array
      * @private
      */
@@ -1325,8 +1326,11 @@
      * @private
      */
     _shouldClearDimensionCache: function() {
+      // @ToRead 什么时候被设置为 true 的
       var shouldClear = this._forceClearCache;
       shouldClear || (shouldClear = this.hasStateChanged('_dimensionAffectingProps'));
+      // console.log('[_shouldClearDimensionCache] this._forceClearCache: ', this._forceClearCache);
+      // console.log('[_shouldClearDimensionCache] shouldClear: ', shouldClear);
       if (shouldClear) {
         this.dirty = true;
         this._forceClearCache = false;
@@ -1520,6 +1524,7 @@
      * @returns {Array} Lines in the text
      */
     _splitTextIntoLines: function(text) {
+      // console.log('text _splitTextIntoLines: ', text);
       var lines = text.split(this._reNewline),
           newLines = new Array(lines.length),
           newLine = ['\n'],
@@ -1529,7 +1534,8 @@
         newLines[i] = fabric.util.string.graphemeSplit(lines[i]);
         newText = newText.concat(newLines[i], newLine);
       }
-      newText.pop(); // 把末尾的 \n 弹出来
+      // 把末尾的 \n 弹出来
+      newText.pop();
       return { _unwrappedLines: newLines, lines: lines, graphemeText: newText, graphemeLines: newLines };
     },
 

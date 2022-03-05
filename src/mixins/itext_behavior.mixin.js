@@ -430,6 +430,7 @@
 
     /**
      * convert from textarea to grapheme indexes
+     * 按编码处理字符的选区
      */
     fromStringToGraphemeSelection: function(start, end, text) {
       var smallerTextStart = text.slice(0, start),
@@ -474,28 +475,33 @@
 
     /**
      * @private
+     * 更新 hiddenTextarea
      */
     updateFromTextArea: function() {
       if (!this.hiddenTextarea) {
         return;
       }
       this.cursorOffsetCache = { };
+      // 设置文本值
       this.text = this.hiddenTextarea.value;
       if (this._shouldClearDimensionCache()) {
         this.initDimensions();
         this.setCoords();
       }
+      // 获取选区下标
       var newSelection = this.fromStringToGraphemeSelection(
         this.hiddenTextarea.selectionStart, this.hiddenTextarea.selectionEnd, this.hiddenTextarea.value);
       this.selectionEnd = this.selectionStart = newSelection.selectionEnd;
       if (!this.inCompositionMode) {
         this.selectionStart = newSelection.selectionStart;
       }
+      // 更新 hiddenTextarea 位置
       this.updateTextareaPosition();
     },
 
     /**
      * @private
+     * 更新 hiddenTextarea 位置
      */
     updateTextareaPosition: function() {
       if (this.selectionStart === this.selectionEnd) {

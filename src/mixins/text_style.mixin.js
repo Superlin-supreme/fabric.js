@@ -189,12 +189,14 @@
     /**
      * Gets style of a current selection/cursor (at the start position)
      * if startIndex or endIndex are not provided, selectionStart or selectionEnd will be used.
+     * 获取一段选区的样式
      * @param {Number} [startIndex] Start index to get styles at
      * @param {Number} [endIndex] End index to get styles at, if not specified selectionEnd or startIndex + 1
      * @param {Boolean} [complete] get full style or not 是否获取所有的样式
      * @return {Array} styles an array with one, zero or more Style objects
      */
     getSelectionStyles: function(startIndex, endIndex, complete) {
+      // 使用 typeof 判断参数是否设置
       if (typeof startIndex === 'undefined') {
         startIndex = this.selectionStart || 0;
       }

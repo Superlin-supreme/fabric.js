@@ -59,6 +59,7 @@
 
     /**
      * Properties which when set cause object to change dimensions
+     * 设置时会触发 object 尺寸改变的属性
      * @type Object
      * @private
      */
@@ -400,11 +401,14 @@
     /**
     * Gets lines of text to render in the Textbox. This function calculates
     * text wrapping on the fly every time it is called.
+    * 获取要在文本框中渲染的文本行
+    * 这个函数在每次调用时计算文本自动换行
     * @param {String} text text to split
     * @returns {Array} Array of lines in the Textbox.
     * @override
     */
     _splitTextIntoLines: function(text) {
+      // console.log('textbox text: ', text);
       var newText = fabric.Text.prototype._splitTextIntoLines.call(this, text),
           graphemeLines = this._wrapText(newText.lines, this.width),
           lines = new Array(graphemeLines.length);

@@ -60,12 +60,17 @@
 
     /**
      * Returns true if object state (one of its state properties) was changed
+     * 如果对象的某个 state 属性变化了，返回 true
      * @param {String} [propertySet] optional name for the set of property we want to save
      * @return {Boolean} true if instance' state has changed since `{@link fabric.Object#saveState}` was called
      */
     hasStateChanged: function(propertySet) {
       propertySet = propertySet || originalSet;
       var dashedPropertySet = '_' + propertySet;
+      // console.log('[hasStateChanged] propertySet: ', propertySet);
+      // console.log('[hasStateChanged] this[propertySet]: ', this[propertySet]);
+      // console.log('[hasStateChanged] dashedPropertySet: ', dashedPropertySet);
+      // console.log('[hasStateChanged] this[dashedPropertySet]: ', this[dashedPropertySet]);
       if (Object.keys(this[dashedPropertySet]).length < this[propertySet].length) {
         return true;
       }

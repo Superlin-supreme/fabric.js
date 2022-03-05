@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fabric</title>
+    <script src="./fabric.min.js"></script>
+    <style>
+        body {
+            display: flex;
+        }
+        canvas {
+            border: 1px solid #2c63ff;
+        }
+        textarea {
+            height: 50px;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="800"></canvas>
+    <textarea id="textarea"></textarea>
+    <script>
+        fabric.disableStyleCopyPaste = true
+        var canvas = new fabric.Canvas('canvas');
+
+        // 正方形
+        var rect = new fabric.Rect({
+            top : 188,
+            left : 45,
+            width : 65,
+            height : 65,
+            fill : '#2c63ff'
+        });
+        canvas.add(rect);
+
+        // 添加文字
+        // var text = new fabric.Text('hello world', { left: 100, top: 100 });
+        // canvas.add(text);
+
+        const O2TextStyle = { fontWeight: 'bold', fill: '#ffffff' }
+
+        // 添加可编辑文字
+        var comicSansText = new fabric.IText("O2 Lab\nSuperlin Duck", {
+            fontFamily: 'Comic Sans',
+            inCompositionMode: true,
+            top: 200,
+            left: 50,
+            // direction: 'rtl',
+            styles:{
+                0: {
+                    0: O2TextStyle,
+                    1: O2TextStyle,
+                }
+            }
+        });
+        canvas.add(comicSansText);
+
+         // 添加不可编辑文字
+        //  var uneditableText = new fabric.IText("It's uneditable", {
+        //     width: 500,
+        //     fontFamily: 'Comic Sans',
+        //     editable: false,
+        //     // direction: 'rtl',
+        // });
+        // canvas.add(uneditableText);
+    </script>
+    <script>
+        const textarea = document.getElementById('textarea')
+
+        textarea.value = 'A \uD87E\uDC04 Z'
+
+        textarea.addEventListener('change', function (e) {
+            console.log('textarea value change: ', e.target.value);
+        })
+    </script>
+</body>
+</html>

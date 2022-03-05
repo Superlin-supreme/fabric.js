@@ -172,6 +172,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @param {Event} e Event object
    */
   onInput: function(e) {
+    // 新插入的文本是否来自粘贴
     var fromPaste = this.fromPaste;
     this.fromPaste = false;
     e && e.stopPropagation();
@@ -180,15 +181,24 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     }
     // decisions about style changes.
     var nextText = this._splitTextIntoLines(this.hiddenTextarea.value).graphemeText,
-        charCount = this._text.length,
-        nextCharCount = nextText.length,
-        removedText, insertedText,
-        charDiff = nextCharCount - charCount,
+        charCount = this._text.length, // 当前文本长度
+        nextCharCount = nextText.length, // 新文本长度
+        removedText, insertedText, // 要移除的文本，插入的文本
+        charDiff = nextCharCount - charCount, // 新旧文本长度差
         selectionStart = this.selectionStart, selectionEnd = this.selectionEnd,
-        selection = selectionStart !== selectionEnd,
+        selection = selectionStart !== selectionEnd, // 判断是否是选区，决定输入操作结果
         copiedStyle, removeFrom, removeTo;
+
+    // console.log('[onInput] this._text: ', this._text);
+    // console.log('[onInput] nextText', nextText);
+    console.log('[onInput] charDiff', charDiff);
+    console.log('[onInput] this.selectionStart', this.selectionStart);
+    console.log('[onInput] this.selectionEnd', this.selectionEnd);
+
+    // 空文本
     if (this.hiddenTextarea.value === '') {
       this.styles = { };
+      // @ToRead
       this.updateFromTextArea();
       this.fire('changed');
       if (this.canvas) {
@@ -198,33 +208,60 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       return;
     }
 
+    // 获取文本选区
     var textareaSelection = this.fromStringToGraphemeSelection(
       this.hiddenTextarea.selectionStart,
       this.hiddenTextarea.selectionEnd,
       this.hiddenTextarea.value
     );
+    console.log('[onInput] this.hiddenTextarea.selectionStart: ', this.hiddenTextarea.selectionStart);
+    console.log('[onInput] this.hiddenTextarea.selectionEnd: ', this.hiddenTextarea.selectionEnd);
+    console.log('[onInput] textareaSelection: ', textareaSelection);
+
+    // 判断是 backDelete 退格还是 forwardDelete 反退格
     var backDelete = selectionStart > textareaSelection.selectionStart;
 
+    console.log('[onInput] selection: ', selection);
     if (selection) {
+      // 取出选区里移除的文本
       removedText = this._text.slice(selectionStart, selectionEnd);
+      // 更新新旧文本长度差
       charDiff += selectionEnd - selectionStart;
+      console.log('[onInput] removedText: ', removedText);
+      console.log('[onInput] charDiff: ', charDiff);
     }
+    // 文本变少
     else if (nextCharCount < charCount) {
+      // 退格、撤销都会走这里
       if (backDelete) {
+        console.log('[onInput] backDelete selectionEnd + charDiff: ', selectionEnd + charDiff);
+        console.log('[onInput] backDelete selectionEnd: ', selectionEnd);
         removedText = this._text.slice(selectionEnd + charDiff, selectionEnd);
       }
       else {
+        /**
+         * 这是哪种情况
+         * 猜测是 insert 键，可以向后删除文字，但是待验证，mac 没得 insert 键
+         * insert 键的意义：https://www.zhihu.com/question/27241054
+         * 正解是 forwardDelete，mac 上是 fn + delete
+         */
+        console.log('[onInput] forwardDelete');
         removedText = this._text.slice(selectionStart, selectionStart - charDiff);
       }
     }
+    // 获取插入的文本
     insertedText = nextText.slice(textareaSelection.selectionEnd - charDiff, textareaSelection.selectionEnd);
+    console.log('[onInput] insertedText: ', insertedText);
     if (removedText && removedText.length) {
       if (insertedText.length) {
         // let's copy some style before deleting.
         // we want to copy the style before the cursor OR the style at the cursor if selection
         // is bigger than 0.
+        // 在删除前，处理下样式
         copiedStyle = this.getSelectionStyles(selectionStart, selectionStart + 1, false);
+        console.log('[onInput] copiedStyle: ', copiedStyle);
         // now duplicate the style one for each inserted text.
+        // 复制插入文本的样式
         copiedStyle = insertedText.map(function() {
           // this return an array of references, but that is fine since we are
           // copying the style later.
@@ -244,16 +281,33 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         removeFrom = selectionEnd;
         removeTo = selectionEnd + removedText.length;
       }
+      console.log('[onInput] removeFrom, removeTo: ', removeFrom, removeTo);
+      /**
+       * @ToRead
+       * 猜测是和删除后光标位置输入文本的样式有关
+       */
       this.removeStyleFromTo(removeFrom, removeTo);
     }
     if (insertedText.length) {
+      /**
+       * 判断
+       * 1.是否来自粘贴
+       * 2.插入的文本等于复制的文本
+       * 3.有无全局禁用样式复制，配置为 fabric.disableStyleCopyPaste
+       */
       if (fromPaste && insertedText.join('') === fabric.copiedText && !fabric.disableStyleCopyPaste) {
-        // 把样式也复制了，牛
+        // 把样式也复制了
         copiedStyle = fabric.copiedTextStyle;
       }
+      /**
+       * @ToRead
+       * 猜测是需要插入样式
+       */
       this.insertNewStyleBlock(insertedText, selectionStart, copiedStyle);
     }
     this.updateFromTextArea();
+
+    // 触发事件
     this.fire('changed');
     if (this.canvas) {
       this.canvas.fire('text:changed', { target: this });
@@ -296,22 +350,24 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     // 获取选区中的文字
     fabric.copiedText = this.getSelectedText();
     if (!fabric.disableStyleCopyPaste) {
-      // 获取复制的字体样式
+      // 获取复制的字体样式，存下来
       fabric.copiedTextStyle = this.getSelectionStyles(this.selectionStart, this.selectionEnd, true);
     }
     else {
       fabric.copiedTextStyle = null;
     }
 
-    // 完成标记
+    // 复制完成标记
     this._copyDone = true;
   },
 
   /**
    * Pastes text
+   * 粘贴文本
    * @param {Event} e Event object
    */
   paste: function() {
+    // 设置粘贴标记
     this.fromPaste = true;
   },
 
