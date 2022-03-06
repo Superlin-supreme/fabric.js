@@ -333,20 +333,26 @@
       if (this.isEditing || !this.editable) {
         return;
       }
-
+      
       if (this.canvas) {
         this.canvas.calcOffset();
+        // 退出其他 iText 图层  
         this.exitEditingOnOthers(this.canvas);
       }
 
+      // 编辑状态标记
       this.isEditing = true;
 
+      // 初始化 hiddenTextarea
       this.initHiddenTextarea(e);
+      // 使 hiddenTextarea 聚焦
       this.hiddenTextarea.focus();
+      // 将当前文本设置到 hiddenTextarea 里头
       this.hiddenTextarea.value = this.text;
       this._updateTextarea();
       this._saveEditingProps();
       this._setEditingProps();
+      // 将编辑前的文本保存下来，在退出编辑状态时用到
       this._textBeforeEdit = this.text;
 
       this._tick();
@@ -362,9 +368,13 @@
     },
 
     exitEditingOnOthers: function(canvas) {
+      // console.log('[exitEditingOnOthers] canvas._iTextInstances: ', canvas._iTextInstances);
+      // 其他 iText 实例
       if (canvas._iTextInstances) {
         canvas._iTextInstances.forEach(function(obj) {
+          // 将选中状态去掉
           obj.selected = false;
+           // 退出编辑状态
           if (obj.isEditing) {
             obj.exitEditing();
           }
@@ -459,6 +469,7 @@
 
     /**
      * @private
+     * 更新 hiddenTextarea 的选区和位置
      */
     _updateTextarea: function() {
       this.cursorOffsetCache = { };
@@ -466,6 +477,7 @@
         return;
       }
       if (!this.inCompositionMode) {
+        // 获取当前文本的选区，并且更新到 hiddenTextarea 中
         var newSelection = this.fromGraphemeToStringSelection(this.selectionStart, this.selectionEnd, this._text);
         this.hiddenTextarea.selectionStart = newSelection.selectionStart;
         this.hiddenTextarea.selectionEnd = newSelection.selectionEnd;
@@ -501,7 +513,7 @@
 
     /**
      * @private
-     * 更新 hiddenTextarea 位置
+     * 计算并更新 hiddenTextarea 位置
      */
     updateTextareaPosition: function() {
       if (this.selectionStart === this.selectionEnd) {
@@ -603,10 +615,12 @@
 
     /**
      * Exits from editing state
+     * 退出编辑状态
      * @return {fabric.IText} thisArg
      * @chainable
      */
     exitEditing: function() {
+      // 判断编辑前后文本有无变化
       var isTextChanged = (this._textBeforeEdit !== this.text);
       var hiddenTextarea = this.hiddenTextarea;
       this.selected = false;
@@ -891,6 +905,7 @@
 
     /**
      * Set the selectionStart and selectionEnd according to the new position of cursor
+     * 点击 + shift，触发选区
      * mimic the key - mouse navigation when shift is pressed.
      */
     setSelectionStartEndWithShift: function(start, end, newSelection) {

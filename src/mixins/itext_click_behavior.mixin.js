@@ -186,6 +186,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Changes cursor location in a text depending on passed pointer (x/y) object
+   * 根据点击发生的坐标(x, y)，决定光标渲染的位置
    * @param {Event} e Event object
    */
   setCursorByClick: function(e) {
@@ -206,6 +207,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Returns index of a character corresponding to where an object was clicked
+   * 获取当前光标点击的文字下标，即第几个文字
    * @param {Event} e Event object
    * @return {Number} Index of a character
    */

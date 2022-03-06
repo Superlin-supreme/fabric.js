@@ -94,6 +94,7 @@
 
   /**
    * Returns element scroll offsets
+   * 获取元素 scroll 的位置
    * @memberOf fabric.util
    * @param {HTMLElement} element Element to operate on
    * @return {Object} Object with left/top values
@@ -135,6 +136,8 @@
 
   /**
    * Returns offset for a given element
+   * 获取给定元素左侧、顶部与 document 的距离
+   * 
    * @function
    * @memberOf fabric.util
    * @param {HTMLElement} element Element to get offset for
@@ -167,6 +170,7 @@
     }
 
     scrollLeftTop = getScrollLeftTop(element);
+    // console.log('[getElementOffset] scrollLeftTop: ', scrollLeftTop);
 
     return {
       left: box.left + scrollLeftTop.left - (docElem.clientLeft || 0) + offset.left,
@@ -176,12 +180,16 @@
 
   /**
    * Returns style attribute value of a given element
+   * 获取给定元素的某个样式属性值
+   * 首先使用 getComputedStyle 获取
+   * 兼容是使用元素的 style 属性获取
    * @memberOf fabric.util
    * @param {HTMLElement} element Element to get style attribute for
    * @param {String} attr Style attribute to get for element
    * @return {String} Style attribute value of the given element.
    */
   var getElementStyle;
+  // document.defaultView，当前 document 对象所关联的 window 对象，参考 mdn
   if (fabric.document.defaultView && fabric.document.defaultView.getComputedStyle) {
     getElementStyle = function(element, attr) {
       var style = fabric.document.defaultView.getComputedStyle(element, null);

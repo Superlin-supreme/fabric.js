@@ -46,6 +46,7 @@
    * 按编码处理字符
    * 参考 https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
    * 'A \uD87E\uDC04 Z' => ['A', ' ', '你', ' ', 'Z']
+   * \uD87E\uDC04 => 你
    * @memberOf fabric.util.string
    * @param {String} textstring String to escape
    * @return {Array} array containing the graphemes

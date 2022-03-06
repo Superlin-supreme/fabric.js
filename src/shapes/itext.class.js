@@ -171,6 +171,7 @@
 
     /**
      * Helps determining when the text is in composition, so that the cursor
+     * 输入法输入合成标记
      * rendering is altered.
      */
     inCompositionMode: false,

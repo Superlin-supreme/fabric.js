@@ -14,8 +14,11 @@
             border: 1px solid #2c63ff;
         }
         textarea {
-            height: 50px;
+            width: 200px;
+            height: 84px;
             margin-left: 20px;
+            font-size: 30px;
+            font-family: 'Comic Sans';
         }
     </style>
 </head>
@@ -23,7 +26,7 @@
     <canvas id="canvas" width="800" height="800"></canvas>
     <textarea id="textarea"></textarea>
     <script>
-        fabric.disableStyleCopyPaste = true
+        // fabric.disableStyleCopyPaste = true
         var canvas = new fabric.Canvas('canvas');
 
         // 正方形
@@ -43,9 +46,8 @@
         const O2TextStyle = { fontWeight: 'bold', fill: '#ffffff' }
 
         // 添加可编辑文字
-        var comicSansText = new fabric.IText("O2 Lab\nSuperlin Duck", {
+        var comicSansText = new fabric.IText("O2 Lab\nSuperlin 🦆🦆", {
             fontFamily: 'Comic Sans',
-            inCompositionMode: true,
             top: 200,
             left: 50,
             // direction: 'rtl',
@@ -54,9 +56,17 @@
                     0: O2TextStyle,
                     1: O2TextStyle,
                 }
-            }
+            },
+            hasControls: false,
         });
         canvas.add(comicSansText);
+
+        var helloText = new fabric.IText("hello, fabric", {
+            fontFamily: 'Comic Sans',
+            top: 80,
+            left: 50,
+        });
+        canvas.add(helloText);
 
          // 添加不可编辑文字
         //  var uneditableText = new fabric.IText("It's uneditable", {
@@ -70,10 +80,24 @@
     <script>
         const textarea = document.getElementById('textarea')
 
-        textarea.value = 'A \uD87E\uDC04 Z'
+        // textarea.value = 'A \uD87E\uDC04 Z'
+        textarea.value = 'O2 Lab\nSuperlin 🦆🦆'
 
+        /**
+         * 触发条件是 textarea 是失去焦点
+         */
         textarea.addEventListener('change', function (e) {
-            console.log('textarea value change: ', e.target.value);
+            console.log('[textarea] change: ', e.target.value);
+        })
+
+        /**
+         * 触发顺序 paste -> input
+         */
+        textarea.addEventListener('input', function (e) {
+            console.log('[textarea] input: ', e.target.value);
+        })
+        textarea.addEventListener('paste', function (e) {
+            console.log('[textarea] paste: ', e);
         })
     </script>
 </body>

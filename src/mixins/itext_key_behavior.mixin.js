@@ -1,7 +1,13 @@
+/**
+ * 主要是和键盘相关的交互操作处理
+ */
 fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.prototype */ {
 
   /**
    * Initializes hidden textarea (needed to bring up keyboard in iOS)
+   * 初始化隐藏的 textarea 元素
+   * 用来唤起键盘，而且输入法会跟着文本
+   * 这就能解释为啥要跟着文本了
    */
   initHiddenTextarea: function() {
     // 创建元素
@@ -17,8 +23,12 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     // line-height: 1px; was removed from the style to fix this:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=870966
     // 设置样式
+    // this.hiddenTextarea.style.cssText = 'position: absolute; top: ' + style.top +
+    // '; left: ' + style.left + '; z-index: -999; opacity: 0; width: 1px; height: 1px; font-size: 1px;' +
+    // ' paddingｰtop: ' + style.fontSize + ';';
+    // 搞大一点看看
     this.hiddenTextarea.style.cssText = 'position: absolute; top: ' + style.top +
-    '; left: ' + style.left + '; z-index: -999; opacity: 0; width: 1px; height: 1px; font-size: 1px;' +
+    '; left: ' + style.left + '; z-index: 999; opacity: 1; width: 75px; height: 35px; font-size: 12px;' +
     ' paddingｰtop: ' + style.fontSize + ';';
 
     if (this.hiddenTextareaContainer) {
@@ -35,10 +45,12 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     fabric.util.addListener(this.hiddenTextarea, 'copy', this.copy.bind(this));
     fabric.util.addListener(this.hiddenTextarea, 'cut', this.copy.bind(this));
     fabric.util.addListener(this.hiddenTextarea, 'paste', this.paste.bind(this));
+    // 处理输入法的输入合成，参考 mdn：https://developer.mozilla.org/zh-CN/docs/Web/API/CompositionEvent
     fabric.util.addListener(this.hiddenTextarea, 'compositionstart', this.onCompositionStart.bind(this));
     fabric.util.addListener(this.hiddenTextarea, 'compositionupdate', this.onCompositionUpdate.bind(this));
     fabric.util.addListener(this.hiddenTextarea, 'compositionend', this.onCompositionEnd.bind(this));
 
+    // 交互层画布点击事件绑定
     if (!this._clickHandlerInitialized && this.canvas) {
       fabric.util.addListener(this.canvas.upperCanvasEl, 'click', this.onClick.bind(this));
       this._clickHandlerInitialized = true;
@@ -55,6 +67,16 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * in that case you have to clone this object and assign your Instance.
    * this.keysMap = fabric.util.object.clone(this.keysMap);
    * The function must be in fabric.Itext.prototype.myFunction And will receive event as args[0]
+   * 9 -> Tab key
+   * 27 -> Escape key
+   * 33 -> Page Up key
+   * 34 -> Page Down key
+   * 35 -> End key
+   * 36 -> Home key
+   * 37 -> Left arrow
+   * 38 -> Up arrow
+   * 39 -> Right arrow
+   * 40 -> Down arrow
    */
   keysMap: {
     9:  'exitEditing',
@@ -70,16 +92,16 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
   },
 
   keysMapRtl: {
-    9:  'exitEditing', // Tab key
-    27: 'exitEditing', // Escape key
-    33: 'moveCursorUp', // Page Up key
-    34: 'moveCursorDown', // Page Down key
-    35: 'moveCursorLeft', // End key
-    36: 'moveCursorRight', // Home key
-    37: 'moveCursorRight', // Left arrow
-    38: 'moveCursorUp', // Up arrow
-    39: 'moveCursorLeft', // Right arrow
-    40: 'moveCursorDown', // Down arrow
+    9:  'exitEditing',
+    27: 'exitEditing',
+    33: 'moveCursorUp',
+    34: 'moveCursorDown',
+    35: 'moveCursorLeft',
+    36: 'moveCursorRight',
+    37: 'moveCursorRight',
+    38: 'moveCursorUp',
+    39: 'moveCursorLeft',
+    40: 'moveCursorDown',
   },
 
   /**
@@ -113,6 +135,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     }
     // 文本方向会影响光标移动
     var keyMap = this.direction === 'rtl' ? this.keysMapRtl : this.keysMap;
+    // keyCode 是已移除的标准，可以考虑改写，参考 mdn: https://developer.mozilla.org/zh-CN/docs/Web/API/KeyboardEvent/keyCode
     if (e.keyCode in keyMap) {
       // 触发对应功能键的事件
       this[keyMap[e.keyCode]](e);
@@ -169,11 +192,13 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Handles onInput event
+   * 处理输入事件
    * @param {Event} e Event object
    */
   onInput: function(e) {
     // 新插入的文本是否来自粘贴
     var fromPaste = this.fromPaste;
+    console.log('[onInput] this.fromPaste: ', this.fromPaste);
     this.fromPaste = false;
     e && e.stopPropagation();
     if (!this.isEditing) {
@@ -189,6 +214,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         selection = selectionStart !== selectionEnd, // 判断是否是选区，决定输入操作结果
         copiedStyle, removeFrom, removeTo;
 
+    console.log('[onInput] this.hiddenTextarea.value', this.hiddenTextarea.value);
     // console.log('[onInput] this._text: ', this._text);
     // console.log('[onInput] nextText', nextText);
     console.log('[onInput] charDiff', charDiff);
@@ -242,8 +268,9 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         /**
          * 这是哪种情况
          * 猜测是 insert 键，可以向后删除文字，但是待验证，mac 没得 insert 键
-         * insert 键的意义：https://www.zhihu.com/question/27241054
-         * 正解是 forwardDelete，mac 上是 fn + delete
+         * insert 键的意义: https://www.zhihu.com/question/27241054
+         * macOS 没有intert键？: https://www.zhihu.com/question/43150799
+         * 读完后面那条注释可以理解，是 forwardDelete，mac 上是 fn + delete
          */
         console.log('[onInput] forwardDelete');
         removedText = this._text.slice(selectionStart, selectionStart - charDiff);
@@ -307,7 +334,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     }
     this.updateFromTextArea();
 
-    // 触发事件
+    // 触发事件和重绘
     this.fire('changed');
     if (this.canvas) {
       this.canvas.fire('text:changed', { target: this });
@@ -316,6 +343,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
   },
   /**
    * Composition start
+   * this.inCompositionMode 输入合成是否在进行的标记
    */
   onCompositionStart: function() {
     this.inCompositionMode = true;
@@ -332,8 +360,11 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
   //  * Composition update
   //  */
   onCompositionUpdate: function(e) {
+    console.log('[onCompositionUpdate] e: ', e);
     this.compositionStart = e.target.selectionStart;
     this.compositionEnd = e.target.selectionEnd;
+    // console.log('[onCompositionUpdate] this.compositionStart: ', this.compositionStart);
+    // console.log('[onCompositionUpdate] this.compositionEnd: ', this.compositionEnd);
     this.updateTextareaPosition();
   },
 
@@ -342,6 +373,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @param {Event} e Event object
    */
   copy: function() {
+    // 当前没有选区的话不进行复制操作
     if (this.selectionStart === this.selectionEnd) {
       //do not cut-copy if no selection
       return;
@@ -369,6 +401,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
   paste: function() {
     // 设置粘贴标记
     this.fromPaste = true;
+    console.log('[paste] this.fromPaste: ', this.fromPaste);
   },
 
   /**
@@ -422,6 +455,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
   /**
    * private
    * Helps finding if the offset should be counted from Start or End
+   * 判断光标偏移位置计算的 参考点
    * @param {Event} e Event object
    * @param {Boolean} isRight
    * @return {Number}
@@ -436,14 +470,21 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
   },
 
   /**
+   * 计算 上移后的光标 与 当前光标 位置下标偏差
    * @param {Event} e Event object
    * @param {Boolean} isRight
    * @return {Number}
    */
   getUpCursorOffset: function(e, isRight) {
+    // console.log('[getUpCursorOffset] isRight: ', isRight);
     var selectionProp = this._getSelectionForOffset(e, isRight),
         cursorLocation = this.get2DCursorLocation(selectionProp),
         lineIndex = cursorLocation.lineIndex;
+    /**
+     * 有两种情况光标会回到开头
+     * 1.当前在第一行 + up
+     * 2.command + up
+     */
     if (lineIndex === 0 || e.metaKey || e.keyCode === 33) {
       // if on first line, up cursor goes to start of line
       return -selectionProp;
@@ -495,9 +536,11 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor down
+   * 光标下移
    * @param {Event} e Event object
    */
   moveCursorDown: function(e) {
+    // 边界判断：光标位于文本末尾
     if (this.selectionStart >= this._text.length && this.selectionEnd >= this._text.length) {
       return;
     }
@@ -506,9 +549,11 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor up
+   * 光标上移
    * @param {Event} e Event object
    */
   moveCursorUp: function(e) {
+    // 边界判断：光标位于文本开头
     if (this.selectionStart === 0 && this.selectionEnd === 0) {
       return;
     }
@@ -517,14 +562,24 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor up or down, fires the events
+   * 移动光标
    * @param {String} direction 'Up' or 'Down'
    * @param {Event} e Event object
    */
   _moveCursorUpOrDown: function(direction, e) {
     // getUpCursorOffset
     // getDownCursorOffset
+    /**
+     * 影响 this._selectionDirection 的场景，都是
+     * left / right，移动光标
+     * left / right + shift，触发选区
+     * click + shift，触发选区
+     */
     var action = 'get' + direction + 'CursorOffset',
         offset = this[action](e, this._selectionDirection === 'right');
+    console.log('[_moveCursorUpOrDown] this._selectionDirection: ', this._selectionDirection);
+    console.log('[_moveCursorUpOrDown] action: ', action);
+    console.log('[_moveCursorUpOrDown] offset: ', offset);
     if (e.shiftKey) {
       this.moveCursorWithShift(offset);
     }
@@ -639,6 +694,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @param {Event} e
    */
   moveCursorLeftWithShift: function(e) {
+    // console.log('[moveCursorLeftWithShift] e: ', e);
     if (this._selectionDirection === 'right' && this.selectionStart !== this.selectionEnd) {
       return this._moveLeft(e, 'selectionEnd');
     }
@@ -687,6 +743,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @param {Event} e
    */
   moveCursorRightWithShift: function(e) {
+    // console.log('[moveCursorRightWithShift] e: ', e);
     if (this._selectionDirection === 'left' && this.selectionStart !== this.selectionEnd) {
       return this._moveRight(e, 'selectionStart');
     }
@@ -701,6 +758,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @param {Event} e Event object
    */
   moveCursorRightWithoutShift: function(e) {
+    // console.log('[moveCursorRightWithoutShift] e: ', e);
     var changed = true;
     this._selectionDirection = 'right';
 

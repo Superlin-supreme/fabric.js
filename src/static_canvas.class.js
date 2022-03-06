@@ -251,6 +251,7 @@
     /**
      * Calculates canvas element offset relative to the document
      * This method is also attached as "resize" event handler of window
+     * 计算渲染层 canvas 左侧和顶部与 document 的距离
      * @return {fabric.Canvas} instance
      * @chainable
      */

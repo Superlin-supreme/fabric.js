@@ -410,6 +410,8 @@
 
     /**
      * When set to `false`, object's controls are not displayed and can not be used to manipulate object
+     * 图层操作按钮开关，旋转、缩放等
+     * 
      * @type Boolean
      * @default
      */
