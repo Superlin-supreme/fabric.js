@@ -578,6 +578,7 @@
 
     /**
      * @private
+     * @ToRead 将一些配置存到 this._savedProps 中
      */
     _saveEditingProps: function() {
       this._savedProps = {
