@@ -146,6 +146,7 @@
 
     /**
      * @private
+     * 空白和换行符
      */
     _reSpace: /\s|\n/,
 
@@ -365,25 +366,29 @@
 
     /**
      * Renders cursor
-     * @param {Object} boundaries
+     * 渲染光标
+     * @param {Object} boundaries 边界？
      * @param {CanvasRenderingContext2D} ctx transformed context to draw on
      */
     renderCursor: function(boundaries, ctx) {
-      var cursorLocation = this.get2DCursorLocation(),
-          lineIndex = cursorLocation.lineIndex,
-          charIndex = cursorLocation.charIndex > 0 ? cursorLocation.charIndex - 1 : 0,
-          charHeight = this.getValueOfPropertyAt(lineIndex, charIndex, 'fontSize'),
+      var cursorLocation = this.get2DCursorLocation(), // 光标位置
+          lineIndex = cursorLocation.lineIndex,  // 行号
+          charIndex = cursorLocation.charIndex > 0 ? cursorLocation.charIndex - 1 : 0, // 列数
+          charHeight = this.getValueOfPropertyAt(lineIndex, charIndex, 'fontSize'), // 字体高度
           multiplier = this.scaleX * this.canvas.getZoom(),
-          cursorWidth = this.cursorWidth / multiplier,
+          cursorWidth = this.cursorWidth / multiplier, // 根据缩放计算光标大小
           topOffset = boundaries.topOffset,
           dy = this.getValueOfPropertyAt(lineIndex, charIndex, 'deltaY');
       topOffset += (1 - this._fontSizeFraction) * this.getHeightOfLine(lineIndex) / this.lineHeight
         - charHeight * (1 - this._fontSizeFraction);
 
       if (this.inCompositionMode) {
+        // 渲染选区？
         this.renderSelection(boundaries, ctx);
       }
+      // 获取字体颜色来设置光标的样色
       ctx.fillStyle = this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, 'fill');
+      // 设置透明度，猜测是达到渐变的动效
       ctx.globalAlpha = this.__isMousedown ? 1 : this._currentCursorOpacity;
       ctx.fillRect(
         boundaries.left + boundaries.leftOffset - cursorWidth / 2,

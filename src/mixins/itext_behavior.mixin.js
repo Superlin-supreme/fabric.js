@@ -269,6 +269,7 @@
 
     /**
      * Finds index corresponding to beginning or end of a word
+     * 单词边界搜索，此处是按空格处理的，对中文不友好
      * @param {Number} selectionStart Index of a character
      * @param {Number} direction 1 or -1
      * @return {Number} Index of the beginning or end of a word

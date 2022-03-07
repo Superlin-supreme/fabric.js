@@ -232,6 +232,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         break;
       }
     }
+    // 获取点击行左侧的偏移距离
     lineLeftOffset = this._getLineLeftOffset(lineIndex);
     width = lineLeftOffset * this.scaleX;
     line = this._textLines[lineIndex];
@@ -239,12 +240,14 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     // we assume RTL writing is mirrored compared to LTR writing.
     // so in position detection we mirror the X offset, and when is time
     // of rendering it, we mirror it again.
+    // 处理从右到左的文字
     if (this.direction === 'rtl') {
       mouseOffset.x = this.width * this.scaleX - mouseOffset.x + width;
     }
     for (var j = 0, jlen = line.length; j < jlen; j++) {
       prevWidth = width;
       // i removed something about flipX here, check.
+      // kernedWidth 横向宽度
       width += this.__charBounds[lineIndex][j].kernedWidth * this.scaleX;
       if (width <= mouseOffset.x) {
         charIndex++;
