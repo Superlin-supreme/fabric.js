@@ -23,12 +23,13 @@
 
     /**
      * Initializes "added" event handler
+     * 图层被添加
      */
     initAddedHandler: function() {
       // 没有箭头函数以前的操作，把 this 的引用存起来
       var _this = this;
       this.on('added', function() {
-        console.log('[initAddedHandler] _this: ', _this);
+        // console.log('[initAddedHandler] _this: ', _this);
         var canvas = _this.canvas;
         if (canvas) {
           if (!canvas._hasITextHandlers) {
