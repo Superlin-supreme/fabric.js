@@ -567,6 +567,7 @@
       this.stateful && obj.setupState();
       obj._set('canvas', this);
       obj.setCoords();
+      // console.log('[_onObjectAdded] obj: ', obj);
       this.fire('object:added', { target: obj });
       obj.fire('added');
     },
