@@ -163,22 +163,37 @@
      * Returns 2d representation (lineIndex and charIndex) of cursor (or selection start)
      * @param {Number} [selectionStart] Optional index. When not given, current selectionStart is used.
      * @param {Boolean} [skipWrapping] consider the location for unwrapped lines. useful to manage styles.
-     * unwrapped lines 未包装的文本行？@todo
+     * unwrapped lines 未包装的文本行？
+     * 按语言编码处理好的文本
      */
     get2DCursorLocation: function(selectionStart, skipWrapping) {
       if (typeof selectionStart === 'undefined') {
         selectionStart = this.selectionStart;
       }
+
+      // console.log('[get2DCursorLocation] this._unwrappedTextLines: ', this._unwrappedTextLines);
+      // console.log('[get2DCursorLocation] this._textLines: ', this._textLines);
+      /**
+       * @ToRead 暂时还没发现这两个有什么区别
+       */
       var lines = skipWrapping ? this._unwrappedTextLines : this._textLines,
           len = lines.length;
+      // 一行一行找
       for (var i = 0; i < len; i++) {
         if (selectionStart <= lines[i].length) {
+          // console.log('[get2DCursorLocation] return ', {
+          //   lineIndex: i,
+          //   charIndex: selectionStart
+          // })
           return {
             lineIndex: i,
             charIndex: selectionStart
           };
         }
+        // + 的优先级高于 -=
         selectionStart -= lines[i].length + this.missingNewlineOffset(i);
+        // console.log('[get2DCursorLocation] selectionStart: ', selectionStart);
+        // console.log('[get2DCursorLocation] this.missingNewlineOffset(' + i + '): ', this.missingNewlineOffset(i));
       }
       return {
         lineIndex: i - 1,

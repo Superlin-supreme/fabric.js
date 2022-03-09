@@ -1283,6 +1283,7 @@
      * @private
      * @param {Number} lineIndex index text line
      * @return {Number} Line left offset
+     * 文本渲染起点 距离 左侧图层边界 的偏移量
      */
     _getLineLeftOffset: function(lineIndex) {
       var lineWidth = this.getLineWidth(lineIndex),
@@ -1536,6 +1537,7 @@
       }
       // 把末尾的 \n 弹出来
       newText.pop();
+      // _unwrappedLines 和 graphemeLines 不是一样的吗 @todo
       return { _unwrappedLines: newLines, lines: lines, graphemeText: newText, graphemeLines: newLines };
     },
 

@@ -415,6 +415,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Finds the width in pixels before the cursor on the same line
+   * 计算光标距离图层左侧的距离
    * @private
    * @param {Number} lineIndex
    * @param {Number} charIndex
@@ -422,9 +423,12 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    */
   _getWidthBeforeCursor: function(lineIndex, charIndex) {
     var widthBeforeCursor = this._getLineLeftOffset(lineIndex), bound;
+    // console.log('[_getWidthBeforeCursor] widthBeforeCursor: ', widthBeforeCursor);
 
     if (charIndex > 0) {
+      // 只要获取光标前的一个字符的位置信息，加上 LineLeftOffset 即可得到结果
       bound = this.__charBounds[lineIndex][charIndex - 1];
+      // console.log(`[_getWidthBeforeCursor] bound[${lineIndex}][${charIndex - 1}]: `, bound);
       widthBeforeCursor += bound.left + bound.width;
     }
     return widthBeforeCursor;
@@ -440,6 +444,8 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     var selectionProp = this._getSelectionForOffset(e, isRight),
         cursorLocation = this.get2DCursorLocation(selectionProp),
         lineIndex = cursorLocation.lineIndex;
+    console.log('[getDownCursorOffset] this.selectionStart: ', this.selectionStart);
+    console.log('[getDownCursorOffset] this.selectionEnd: ', this.selectionEnd);
     // if on last line, down cursor goes to end of line
     if (lineIndex === this._textLines.length - 1 || e.metaKey || e.keyCode === 34) {
       // move to the end of a text
@@ -456,6 +462,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * private
    * Helps finding if the offset should be counted from Start or End
    * 判断光标偏移位置计算的 参考点
+   * 如果只是移动光标，就是下标位置
    * @param {Event} e Event object
    * @param {Boolean} isRight
    * @return {Number}
@@ -476,10 +483,13 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @return {Number}
    */
   getUpCursorOffset: function(e, isRight) {
-    // console.log('[getUpCursorOffset] isRight: ', isRight);
+    console.log('[getUpCursorOffset] isRight: ', isRight);
     var selectionProp = this._getSelectionForOffset(e, isRight),
         cursorLocation = this.get2DCursorLocation(selectionProp),
         lineIndex = cursorLocation.lineIndex;
+    console.log('[getUpCursorOffset] this.selectionStart: ', this.selectionStart);
+    console.log('[getUpCursorOffset] this.selectionEnd: ', this.selectionEnd);
+    console.log('[getUpCursorOffset] cursorLocation: ', cursorLocation);
     /**
      * 有两种情况光标会回到开头
      * 1.当前在第一行 + up
@@ -570,20 +580,21 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     // getUpCursorOffset
     // getDownCursorOffset
     /**
-     * 影响 this._selectionDirection 的场景，都是
+     * 影响 this._selectionDirection 的场景：
      * left / right，移动光标
      * left / right + shift，触发选区
      * click + shift，触发选区
      */
     var action = 'get' + direction + 'CursorOffset',
         offset = this[action](e, this._selectionDirection === 'right');
-    console.log('[_moveCursorUpOrDown] this._selectionDirection: ', this._selectionDirection);
-    console.log('[_moveCursorUpOrDown] action: ', action);
-    console.log('[_moveCursorUpOrDown] offset: ', offset);
+    // console.log('[_moveCursorUpOrDown] this._selectionDirection: ', this._selectionDirection);
+    // console.log('[_moveCursorUpOrDown] action: ', action);
+    // console.log('[_moveCursorUpOrDown] offset: ', offset);
     if (e.shiftKey) {
       this.moveCursorWithShift(offset);
     }
     else {
+      // 纯粹的光标上移和下移
       this.moveCursorWithoutShift(offset);
     }
     if (offset !== 0) {
