@@ -375,6 +375,8 @@
      * @return {Boolean}
      */
     isEndOfWrapping: function(lineIndex) {
+      // console.log('[isEndOfWrapping] this._styleMap: ', this._styleMap);
+      // console.log('[isEndOfWrapping] this: ', this);
       if (!this._styleMap[lineIndex + 1]) {
         // is last line, return true;
         return true;
@@ -389,6 +391,8 @@
     /**
      * Detect if a line has a linebreak and so we need to account for it when moving
      * and counting style.
+     * 啥意思
+     * 和自动换行有关系，自动换行的返回 1，非自动换行返回 0
      * @return Number
      */
     missingNewlineOffset: function(lineIndex) {

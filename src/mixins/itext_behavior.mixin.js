@@ -138,6 +138,8 @@
 
     /**
      * Initializes delayed cursor
+     * 初始化延迟光标？
+     * 上/下移后光标会闪烁
      */
     initDelayedCursor: function(restart) {
       var _this = this,
@@ -152,6 +154,7 @@
 
     /**
      * Aborts cursor animation and clears all timeouts
+     * 停止光标动画，清楚所有定时器
      */
     abortCursorAnimation: function() {
       var shouldClear = this._currentTickState || this._currentTickCompleteState,
@@ -946,14 +949,17 @@
       }
     },
 
+    // 检测光标/选区有无超出边界
     setSelectionInBoundaries: function() {
       var length = this.text.length;
+      // check 起始位置
       if (this.selectionStart > length) {
         this.selectionStart = length;
       }
       else if (this.selectionStart < 0) {
         this.selectionStart = 0;
       }
+      // check 末尾位置
       if (this.selectionEnd > length) {
         this.selectionEnd = length;
       }

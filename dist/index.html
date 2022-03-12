@@ -15,7 +15,7 @@
         }
         textarea {
             width: 200px;
-            height: 84px;
+            height: 126px;
             margin-left: 20px;
             font-size: 30px;
             font-family: 'Comic Sans';
@@ -46,7 +46,7 @@
         const O2TextStyle = { fontWeight: 'bold', fill: '#ffffff' }
 
         // 添加可编辑文字
-        var comicSansText = new fabric.IText("\u004F2 Lab\nSuperlin 🦆🦆", {
+        var comicSansText = new fabric.IText("\u004F2 Lab\nSuperlin 🦆🦆\n这里是深圳", {
             fontFamily: 'Comic Sans',
             top: 200,
             left: 50,
@@ -57,7 +57,7 @@
                     1: O2TextStyle,
                 }
             },
-            hasControls: false,
+            // hasControls: false,
         });
         canvas.add(comicSansText);
 
@@ -68,7 +68,7 @@
         });
         canvas.add(helloText);
 
-         // 添加不可编辑文字
+        // 添加不可编辑文字
         //  var uneditableText = new fabric.IText("It's uneditable", {
         //     width: 500,
         //     fontFamily: 'Comic Sans',
@@ -76,12 +76,34 @@
         //     // direction: 'rtl',
         // });
         // canvas.add(uneditableText);
+
+        // 添加 textbox
+        var textbox = new fabric.Textbox("This lib is free for everyone.\nSome things are not.\nPeople behind FabricJS acknowledge that Black people have to fight for basic rights, against systemic racism, unequal opportunities and injustice across the 🌎.\nWe know this is wrong and we are 💔. 💪🏽💪🏾💪🏿!", {
+            fontFamily: 'Comic Sans',
+            width: 460,
+            top: 400,
+            left: 50,
+            fontSize: 16,
+            splitByGrapheme: true,
+        });
+        canvas.add(textbox);
+    </script>
+    <script>
+        // 监听单个图层的事件
+        comicSansText.on('selection:changed', function (options) {
+            // console.log('[comicSansText] selection:changed: ', options);
+        })
+
+        // 监听所有文本选区变化事件
+        canvas.on('text:selection:changed', function (options) {
+            // console.log('[canvas] text:selection:changed: ', options);
+        })
     </script>
     <script>
         const textarea = document.getElementById('textarea')
 
         // textarea.value = 'A \uD87E\uDC04 Z'
-        textarea.value = 'O2 Lab\nSuperlin 🦆🦆'
+        textarea.value = 'O2 Lab\nSuperlin 🦆🦆\n这里是深圳'
 
         /**
          * 触发条件是 textarea 是失去焦点

@@ -115,6 +115,7 @@
 
     /**
      * Delay between cursor blink (in ms)
+     * 光标开始闪烁前的停顿时间
      * @type Number
      * @default
      */
@@ -162,6 +163,7 @@
 
     /**
      * @private
+     * 可以禁掉光标的闪烁效果
      */
     _abortCursorAnimation: false,
 
@@ -221,6 +223,7 @@
 
     /**
      * Fires the even of selection changed
+     * 触发选区变化事件，但框架内部是用不到的
      * @private
      */
     _fireSelectionChanged: function() {

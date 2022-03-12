@@ -436,6 +436,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Gets start offset of a selection
+   * 计算 下移后的光标 与 当前光标 位置下标偏差
    * @param {Event} e Event object
    * @param {Boolean} isRight
    * @return {Number}
@@ -444,17 +445,23 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     var selectionProp = this._getSelectionForOffset(e, isRight),
         cursorLocation = this.get2DCursorLocation(selectionProp),
         lineIndex = cursorLocation.lineIndex;
-    console.log('[getDownCursorOffset] this.selectionStart: ', this.selectionStart);
-    console.log('[getDownCursorOffset] this.selectionEnd: ', this.selectionEnd);
+    // console.log('[getDownCursorOffset] this.selectionStart: ', this.selectionStart);
+    // console.log('[getDownCursorOffset] this.selectionEnd: ', this.selectionEnd);
+    console.log('[getDownCursorOffset] selectionProp: ', selectionProp);
+    console.log('[getDownCursorOffset] this._text.length: ', this._text.length);
     // if on last line, down cursor goes to end of line
     if (lineIndex === this._textLines.length - 1 || e.metaKey || e.keyCode === 34) {
       // move to the end of a text
+      // 当前是选区的情况计算错了
       return this._text.length - selectionProp;
     }
     var charIndex = cursorLocation.charIndex,
         widthBeforeCursor = this._getWidthBeforeCursor(lineIndex, charIndex),
         indexOnOtherLine = this._getIndexOnLine(lineIndex + 1, widthBeforeCursor),
         textAfterCursor = this._textLines[lineIndex].slice(charIndex);
+    /**
+     * 当前光标所在位置后面有多少字符 + 下移后光标所在字符的下标 + (1 + 1)
+     */
     return textAfterCursor.length + indexOnOtherLine + 1 + this.missingNewlineOffset(lineIndex);
   },
 
@@ -483,13 +490,13 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @return {Number}
    */
   getUpCursorOffset: function(e, isRight) {
-    console.log('[getUpCursorOffset] isRight: ', isRight);
+    // console.log('[getUpCursorOffset] isRight: ', isRight);
     var selectionProp = this._getSelectionForOffset(e, isRight),
         cursorLocation = this.get2DCursorLocation(selectionProp),
         lineIndex = cursorLocation.lineIndex;
-    console.log('[getUpCursorOffset] this.selectionStart: ', this.selectionStart);
-    console.log('[getUpCursorOffset] this.selectionEnd: ', this.selectionEnd);
-    console.log('[getUpCursorOffset] cursorLocation: ', cursorLocation);
+    // console.log('[getUpCursorOffset] this.selectionStart: ', this.selectionStart);
+    // console.log('[getUpCursorOffset] this.selectionEnd: ', this.selectionEnd);
+    // console.log('[getUpCursorOffset] cursorLocation: ', cursorLocation);
     /**
      * 有两种情况光标会回到开头
      * 1.当前在第一行 + up
@@ -504,13 +511,23 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         indexOnOtherLine = this._getIndexOnLine(lineIndex - 1, widthBeforeCursor),
         textBeforeCursor = this._textLines[lineIndex].slice(0, charIndex),
         missingNewlineOffset = this.missingNewlineOffset(lineIndex - 1);
-    // return a negative offset
+    // console.log('[getUpCursorOffset] this._textLines[' + (lineIndex - 1) + '].length', this._textLines[lineIndex - 1].length)
+    // console.log('[getUpCursorOffset] indexOnOtherLine', indexOnOtherLine)
+    // console.log('[getUpCursorOffset] textBeforeCursor', textBeforeCursor)
+    // console.log('[getUpCursorOffset] missingNewlineOffset', missingNewlineOffset)
+    /**
+     * @ToRead missingNewlineOffset 是啥作用
+     * - 上一行的字符数 + 上移后光标所在字符的下标 - 当前光标所在位置前面有多少字符 + (1 - 1)
+     */
+    // return a negative offset 返回偏移量为负数
     return -this._textLines[lineIndex - 1].length
      + indexOnOtherLine - textBeforeCursor.length + (1 - missingNewlineOffset);
   },
 
   /**
    * for a given width it founds the matching character.
+   * 用于光标上移/下移后，出现在上一行/下一行的位置
+   * 根据宽度在给定的一行里匹配字符，返回字符下标
    * @private
    */
   _getIndexOnLine: function(lineIndex, width) {
@@ -520,22 +537,28 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         widthOfCharsOnLine = lineLeftOffset,
         indexOnLine = 0, charWidth, foundMatch;
 
+    // 复杂度 O(n)
     for (var j = 0, jlen = line.length; j < jlen; j++) {
       charWidth = this.__charBounds[lineIndex][j].width;
       widthOfCharsOnLine += charWidth;
       if (widthOfCharsOnLine > width) {
         foundMatch = true;
+        // Edge 边缘、临界点，字符边界吧
         var leftEdge = widthOfCharsOnLine - charWidth,
             rightEdge = widthOfCharsOnLine,
             offsetFromLeftEdge = Math.abs(leftEdge - width),
             offsetFromRightEdge = Math.abs(rightEdge - width);
+        // console.log('[_getIndexOnLine] leftEdge: ', leftEdge);
+        // console.log('[_getIndexOnLine] rightEdge: ', rightEdge);
 
+        // 判断 给定的位置 与 匹配到的字符 左侧还是右侧比较近
         indexOnLine = offsetFromRightEdge < offsetFromLeftEdge ? j : (j - 1);
         break;
       }
     }
 
     // reached end
+    // 没匹配到，说明该行的宽度小于给定的宽度
     if (!foundMatch) {
       indexOnLine = line.length - 1;
     }
@@ -589,7 +612,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         offset = this[action](e, this._selectionDirection === 'right');
     // console.log('[_moveCursorUpOrDown] this._selectionDirection: ', this._selectionDirection);
     // console.log('[_moveCursorUpOrDown] action: ', action);
-    // console.log('[_moveCursorUpOrDown] offset: ', offset);
+    console.log('[_moveCursorUpOrDown] offset: ', offset);
     if (e.shiftKey) {
       this.moveCursorWithShift(offset);
     }
@@ -597,11 +620,20 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       // 纯粹的光标上移和下移
       this.moveCursorWithoutShift(offset);
     }
+    /**
+     * @ToRead 会有等于 0 的情况吗
+     */
     if (offset !== 0) {
       this.setSelectionInBoundaries();
-      this.abortCursorAnimation();
-      this._currentCursorOpacity = 1;
+      /**
+       * 这两行的操作实际上在 _initDelayedCursor 都会执行
+       * @ToRead 可以删掉这两行吗
+       */
+      // this.abortCursorAnimation();
+      // 将光标渐变置为初始值 1，释掉也不会影响
+      // this._currentCursorOpacity = 1;
       this.initDelayedCursor();
+      // 更新选区和 hiddenTextarea
       this._fireSelectionChanged();
       this._updateTextarea();
     }
@@ -621,17 +653,26 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor up without shift
+   * 用计算好的偏移量，设置新光标的位置
    * @param {Number} offset
    */
   moveCursorWithoutShift: function(offset) {
-    if (offset < 0) {
-      this.selectionStart += offset;
-      this.selectionEnd = this.selectionStart;
-    }
-    else {
-      this.selectionEnd += offset;
-      this.selectionStart = this.selectionEnd;
-    }
+    console.log('[moveCursorWithoutShift]  current selection', this.selectionStart, this.selectionEnd);
+    // fix down arrow not go to the right position
+    // 在别的使用 down 键没有走到正确的位置
+    // 当前在最后一行选中文本时，使用 down 键没有走到正确的位置，且 right 键失效
+    this.selectionStart += offset;
+    this.selectionEnd = this.selectionStart;
+    // 根据 offset 正负决定向哪个方向移动
+    // if (offset < 0) {
+    //   this.selectionStart += offset;
+    //   this.selectionEnd = this.selectionStart;
+    // }
+    // else {
+    //   this.selectionEnd += offset;
+    //   this.selectionStart = this.selectionEnd;
+    // }
+    console.log('[moveCursorWithoutShift] after set current selection', this.selectionStart, this.selectionEnd);
     return offset !== 0;
   },
 
@@ -684,10 +725,12 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor left without keeping selection
+   * 纯粹地移动左移光标，不需要考虑选区
    * @param {Event} e
    */
   moveCursorLeftWithoutShift: function(e) {
     var change = true;
+    // 记录移动方向
     this._selectionDirection = 'left';
 
     // only move cursor when there is no selection,
@@ -717,9 +760,11 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor right
+   * 光标右移
    * @param {Event} e Event object
    */
   moveCursorRight: function(e) {
+    // 判断光标是否在文本末尾
     if (this.selectionStart >= this._text.length && this.selectionEnd >= this._text.length) {
       return;
     }
@@ -733,12 +778,17 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    */
   _moveCursorLeftOrRight: function(direction, e) {
     var actionName = 'moveCursor' + direction + 'With';
+    // 
     this._currentCursorOpacity = 1;
 
     if (e.shiftKey) {
+      // shift + left / right 触发
+      // moveCursorLeftWithShift
       actionName += 'Shift';
     }
     else {
+      // left / right 触发
+      // moveCursorLeftWithoutShift
       actionName += 'outShift';
     }
     if (this[actionName](e)) {
