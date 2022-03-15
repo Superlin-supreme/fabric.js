@@ -951,9 +951,13 @@
 
     // 检测光标/选区有无超出边界
     setSelectionInBoundaries: function() {
-      var length = this.text.length;
+      // 这样取到 length 不一定对
+      // var length = this.text.length;
+      var length = this._text.length;
+      // console.log('setSelectionInBoundaries length: ', length);
       // check 起始位置
       if (this.selectionStart > length) {
+        // 出问题了
         this.selectionStart = length;
       }
       else if (this.selectionStart < 0) {
@@ -961,6 +965,7 @@
       }
       // check 末尾位置
       if (this.selectionEnd > length) {
+        // 出问题了
         this.selectionEnd = length;
       }
       else if (this.selectionEnd < 0) {

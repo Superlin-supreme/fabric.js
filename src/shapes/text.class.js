@@ -374,6 +374,7 @@
       if (this.path) {
         this.setPathInfo();
       }
+      // 为什么又设置一遍
       this.__skipDimension = false;
       this.initDimensions();
       this.setCoords();
@@ -383,6 +384,7 @@
     /**
      * If text has a path, it will add the extra information needed
      * for path and text calculations
+     * 如果文本设置了路径，会为路径添和文本计算加额外的信息？
      * @return {fabric.Text} thisArg
      */
     setPathInfo: function() {
@@ -427,8 +429,10 @@
      * Initialize or update text dimensions.
      * Updates this.width and this.height with the proper values.
      * Does not return dimensions.
+     * 初始化或更新文本尺寸
      */
     initDimensions: function() {
+      // 应该不会跑到下面去
       if (this.__skipDimension) {
         return;
       }

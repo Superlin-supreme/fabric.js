@@ -46,7 +46,7 @@
         const O2TextStyle = { fontWeight: 'bold', fill: '#ffffff' }
 
         // 添加可编辑文字
-        var comicSansText = new fabric.IText("\u004F2 Lab\nSuperlin 🦆🦆\n这里是深圳", {
+        var duckText = new fabric.IText("\u004F2 Lab\nSuperlin🦆🦆\n这里是深圳", {
             fontFamily: 'Comic Sans',
             top: 200,
             left: 50,
@@ -59,7 +59,7 @@
             },
             // hasControls: false,
         });
-        canvas.add(comicSansText);
+        canvas.add(duckText);
 
         var helloText = new fabric.IText("hello, fabric", {
             fontFamily: 'Comic Sans',
@@ -67,6 +67,13 @@
             left: 50,
         });
         canvas.add(helloText);
+
+        var zhText = new fabric.IText("你好\n这里是深圳", {
+            fontFamily: 'Comic Sans',
+            top: 400,
+            left: 50,
+        });
+        canvas.add(zhText);
 
         // 添加不可编辑文字
         //  var uneditableText = new fabric.IText("It's uneditable", {
@@ -81,7 +88,7 @@
         var textbox = new fabric.Textbox("This lib is free for everyone.\nSome things are not.\nPeople behind FabricJS acknowledge that Black people have to fight for basic rights, against systemic racism, unequal opportunities and injustice across the 🌎.\nWe know this is wrong and we are 💔. 💪🏽💪🏾💪🏿!", {
             fontFamily: 'Comic Sans',
             width: 460,
-            top: 400,
+            top: 550,
             left: 50,
             fontSize: 16,
             splitByGrapheme: true,
@@ -90,8 +97,8 @@
     </script>
     <script>
         // 监听单个图层的事件
-        comicSansText.on('selection:changed', function (options) {
-            // console.log('[comicSansText] selection:changed: ', options);
+        duckText.on('selection:changed', function (options) {
+            // console.log('[duckText] selection:changed: ', options);
         })
 
         // 监听所有文本选区变化事件
