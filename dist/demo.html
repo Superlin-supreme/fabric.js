@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>demo</title>
+    <style>
+        canvas {
+          border: 1px solid #2c63ff;
+        }
+      </style>
+    <script src="./fabric.min.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="800" height="800"></canvas>
+<script>
+const canvas = new fabric.Canvas('canvas');
+const O2TextStyle = { fontWeight: "bold", fill: "#ffffff" };
+
+// 搞个正方形，基本上是封装了 canvas 的 fillRect
+const rect = new fabric.Rect({
+  top: 188,
+  left: 270,
+  width: 65,
+  height: 65,
+  fill: "#2c63ff",
+});
+
+// 搞一段文字
+const duckText = new fabric.IText(
+  "\u004F2 Lab\nSuperlin🦆🦆\n这里是深圳",
+  {
+    fontFamily: "Comic Sans",
+    top: 200,
+    left: 275,
+    // 设置单个文本样式
+    styles: {
+      0: {
+        0: O2TextStyle,
+        1: O2TextStyle,
+      },
+    },
+  }
+);
+
+// 把正方形和文字加到画布中去
+canvas.add(rect);
+canvas.add(duckText);
+</script>
+</body>
+</html>

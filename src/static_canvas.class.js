@@ -39,8 +39,10 @@
      * @param {HTMLElement | String} el &lt;canvas> element to initialize instance on
      * @param {Object} [options] Options object
      * @return {Object} thisArg
+     * 使用一个 canvas 元素进行初始化
      */
     initialize: function(el, options) {
+      console.log('[fabric.StaticCanvas] initialize');
       options || (options = { });
       this.renderAndResetBound = this.renderAndReset.bind(this);
       this.requestRenderAllBound = this.requestRenderAll.bind(this);
@@ -262,15 +264,18 @@
 
     /**
      * @private
+     * 创建 canvas 元素
      */
     _createCanvasElement: function() {
       var element = createCanvasElement();
+      // 创建失败会报错
       if (!element) {
         throw CANVAS_INIT_ERROR;
       }
       if (!element.style) {
         element.style = { };
       }
+      // 如果 canvas 上下文无法获取也会报错
       if (typeof element.getContext === 'undefined') {
         throw CANVAS_INIT_ERROR;
       }
@@ -285,6 +290,7 @@
       var lowerCanvasEl = this.lowerCanvasEl;
       this._setOptions(options);
 
+      // 取渲染层 canvas 元素的宽高
       this.width = this.width || parseInt(lowerCanvasEl.width, 10) || 0;
       this.height = this.height || parseInt(lowerCanvasEl.height, 10) || 0;
 
@@ -303,11 +309,13 @@
 
     /**
      * Creates a bottom canvas
+     * 创建渲染层 canvas 元素
      * @private
      * @param {HTMLElement} [canvasEl]
      */
     _createLowerCanvas: function (canvasEl) {
       // canvasEl === 'HTMLCanvasElement' does not work on jsdom/node
+      // 直接传入 canvas 元素的情况，例如 jsdom
       if (canvasEl && canvasEl.getContext) {
         this.lowerCanvasEl = canvasEl;
       }
@@ -315,7 +323,9 @@
         this.lowerCanvasEl = fabric.util.getById(canvasEl) || this._createCanvasElement();
       }
 
+      // 加个类名
       fabric.util.addClass(this.lowerCanvasEl, 'lower-canvas');
+      // 获取原本的 style 属性
       this._originalCanvasStyle = this.lowerCanvasEl.style;
       if (this.interactive) {
         this._applyCanvasStyle(this.lowerCanvasEl);

@@ -405,6 +405,8 @@
         return;
       }
 
+      console.log('[mouseMoveHandler] options: ', options);
+
       var newSelectionStart = this.getSelectionStartFromPointer(options.e),
           currentStart = this.selectionStart,
           currentEnd = this.selectionEnd;

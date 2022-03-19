@@ -26,6 +26,7 @@
       // in case we initialized the class twice. This should not happen normally
       // but in some kind of applications where the canvas element may be changed
       // this is a workaround to having double listeners.
+      // workaround 解决方案，防止二次绑定监听器
       this.removeListeners();
       this._bindEvents();
       this.addOrRemove(addListener, 'add');
@@ -39,6 +40,7 @@
       return this.enablePointerEvents ? 'pointer' : 'mouse';
     },
 
+    // functor 可能是 addEventListener 或者 removeEventListener
     addOrRemove: function(functor, eventjsFunctor) {
       var canvasElement = this.upperCanvasEl,
           eventTypePrefix = this._getEventPrefix();
@@ -382,6 +384,7 @@
      * @private
      */
     _onResize: function () {
+      console.log('[_onResize] start');
       this.calcOffset();
     },
 
@@ -964,9 +967,13 @@
             hoverCursor = _target.hoverCursor || hoverCursor;
           });
         }
+        // console.log('[_setCursorFromEvent] target.hoverCursor: ', target.hoverCursor);
+        // console.log('[_setCursorFromEvent] this.hoverCursor: ', this.hoverCursor);
+        // console.log('[_setCursorFromEvent] hoverCursor: ', hoverCursor);
         this.setCursor(hoverCursor);
       }
       else {
+        // console.log('[_setCursorFromEvent] this.getCornerCursor: ', this.getCornerCursor(corner, target, e));
         this.setCursor(this.getCornerCursor(corner, target, e));
       }
     },

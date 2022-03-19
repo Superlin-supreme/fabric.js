@@ -28,7 +28,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     // ' paddingｰtop: ' + style.fontSize + ';';
     // 搞大一点看看
     this.hiddenTextarea.style.cssText = 'position: absolute; top: ' + style.top +
-    '; left: ' + style.left + '; z-index: 999; opacity: 1; width: 75px; height: 35px; font-size: 12px;' +
+    '; left: ' + style.left + '; z-index: 999; opacity: 1; width: 85px; height: 47px; font-size: 12px;' +
     ' paddingｰtop: ' + style.fontSize + ';';
 
     if (this.hiddenTextareaContainer) {
@@ -498,9 +498,13 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     // console.log('[getUpCursorOffset] this.selectionEnd: ', this.selectionEnd);
     // console.log('[getUpCursorOffset] cursorLocation: ', cursorLocation);
     /**
-     * 有两种情况光标会回到开头
+     * 有几种种情况光标会回到开头
      * 1.当前在第一行 + up
      * 2.command + up
+     * 3.pgUp
+     * 
+     * metaKey 在 windows 系统中为 Windows 键
+     * 而 Windows + up / down 是将窗口最大化和最小化的快捷键
      */
     if (lineIndex === 0 || e.metaKey || e.keyCode === 33) {
       // if on first line, up cursor goes to start of line

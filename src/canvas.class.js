@@ -52,6 +52,7 @@
      * @return {Object} thisArg
      */
     initialize: function(el, options) {
+      // console.log('[fabric.Canvas] initialize');
       options || (options = { });
       this.renderAndResetBound = this.renderAndReset.bind(this);
       this.requestRenderAllBound = this.requestRenderAll.bind(this);
@@ -361,6 +362,7 @@
 
     /**
      * @private
+     * 初始化交互操作
      */
     _initInteractive: function() {
       this._currentTransform = null;
