@@ -452,6 +452,16 @@
           extraTop = lineHeight;
         }
         else {
+          var gradient = ctx.createLinearGradient(drawStart, 0, drawWidth, 0);
+          // console.log('drawStart: ', drawStart);
+          // console.log('drawWidth: ', drawWidth);
+          // gradient.addColorStop(0, 'rgba(44,99,255,1)');
+          // gradient.addColorStop(.25, 'rgba(208,48,48,1)');
+          // gradient.addColorStop(0.5, 'rgba(0,165,80,1)');
+          // gradient.addColorStop(0.75, 'rgba(232,118,38,1)');
+          // gradient.addColorStop(1, 'rgba(131,61,200,1)');
+          // ctx.fillStyle = gradient;
+
           ctx.fillStyle = this.selectionColor;
         }
         if (this.direction === 'rtl') {

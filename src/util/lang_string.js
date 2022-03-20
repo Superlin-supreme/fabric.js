@@ -78,7 +78,7 @@
     // 可参考：https://zh.wikipedia.org/wiki/Unicode%E5%AD%97%E7%AC%A6%E5%B9%B3%E9%9D%A2%E6%98%A0%E5%B0%84
     // High surrogate (could change last hex to 0xDB7F to treat high private
     // surrogates as single characters)
-    // UTF-16 的 高半区
+    // UTF-16 的 高半区 D800-DBFF，低半区 DC00-DFFF
     if (0xD800 <= code && code <= 0xDBFF) {
       if (str.length <= (i + 1)) {
         throw 'High surrogate without following low surrogate';
