@@ -101,6 +101,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       return;
     }
 
+    // 鼠标按下标记，会用在鼠标移动的情况
     this.__isMousedown = true;
 
     if (this.selected) {

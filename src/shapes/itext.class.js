@@ -140,8 +140,11 @@
      * An alternative to attaching to the document.body.
      * Useful to reduce laggish redraw of the full document.body tree and
      * also with modals event capturing that won't let the textarea take focus.
+     * 放置 hiddenTextarea 的 DOM 元素
+     * 可以有效减少 document.body 的重绘
      * @type HTMLElement
      * @default
+     * 在 IText 内部默认兜底为 document.body
      */
     hiddenTextareaContainer: null,
 

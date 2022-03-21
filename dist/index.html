@@ -25,6 +25,7 @@
   <body>
     <canvas id="canvas" width="800" height="800"></canvas>
     <textarea id="textarea"></textarea>
+    <!-- <div id="textarea-wrap"></div> -->
     <script>
       // fabric.disableStyleCopyPaste = true
       // const canvas = new fabric.StaticCanvas("canvas");
@@ -53,14 +54,15 @@
           fontFamily: "Comic Sans",
           top: 200,
           left: 50,
-          // direction: 'rtl',
           styles: {
             0: {
               0: O2TextStyle,
               1: O2TextStyle,
             },
           },
+          // direction: 'rtl',
           // hasControls: false,
+          // hiddenTextareaContainer: document.querySelector('#textarea-wrap')
         }
       );
       canvas.add(duckText);

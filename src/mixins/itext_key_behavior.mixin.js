@@ -599,7 +599,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor up or down, fires the events
-   * 移动光标
+   * 光标上/下移
    * @param {String} direction 'Up' or 'Down'
    * @param {Event} e Event object
    */
@@ -645,6 +645,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
   /**
    * Moves cursor with shift
+   * 按住 shift 移动光标
    * @param {Number} offset
    */
   moveCursorWithShift: function(offset) {

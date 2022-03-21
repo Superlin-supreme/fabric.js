@@ -26,7 +26,7 @@
      * 图层被添加
      */
     initAddedHandler: function() {
-      // 没有箭头函数以前的操作，把 this 的引用存起来
+      // 没有箭头函数以前的操作，把 this 的引用存起来，典型的闭包处理
       var _this = this;
       this.on('added', function() {
         // console.log('[initAddedHandler] _this: ', _this);
@@ -36,6 +36,7 @@
             canvas._hasITextHandlers = true;
             _this._initCanvasHandlers(canvas);
           }
+          // 全局属性，用来记录当前画布存在的 iText 图层
           canvas._iTextInstances = canvas._iTextInstances || [];
           canvas._iTextInstances.push(_this);
         }
@@ -64,6 +65,7 @@
     _initCanvasHandlers: function(canvas) {
       canvas._mouseUpITextHandler = function() {
         if (canvas._iTextInstances) {
+          // 重置每个 IText 图层的 __isMousedown 标记
           canvas._iTextInstances.forEach(function(obj) {
             obj.__isMousedown = false;
           });
@@ -399,13 +401,14 @@
 
     /**
      * @private
+     * 鼠标移动处理
      */
     mouseMoveHandler: function(options) {
       if (!this.__isMousedown || !this.isEditing) {
         return;
       }
 
-      console.log('[mouseMoveHandler] options: ', options);
+      // console.log('[mouseMoveHandler] options: ', options);
 
       var newSelectionStart = this.getSelectionStartFromPointer(options.e),
           currentStart = this.selectionStart,
