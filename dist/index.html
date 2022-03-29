@@ -70,7 +70,7 @@
       const helloText = new fabric.IText("hello, fabric", {
         fontFamily: "Comic Sans",
         top: 80,
-        left: 50,
+        left: 550,
       });
       canvas.add(helloText);
 
@@ -107,7 +107,7 @@
     <script>
       // 监听单个图层的事件
       duckText.on("selection:changed", function (options) {
-        console.log("[duckText] selection:changed: ", options);
+        // console.log("[duckText] selection:changed: ", options);
       });
 
       // 监听所有文本选区变化事件
@@ -137,6 +137,13 @@
       textarea.addEventListener("paste", function (e) {
         console.log("[textarea] paste: ", e);
       });
+    </script>
+    <script>
+      helloText.animate('left', 50, {
+        onChange: canvas.renderAll.bind(canvas),
+        duration: 1000,
+        easing: fabric.util.ease.easeOutBounce
+      })
     </script>
   </body>
 </html>

@@ -387,6 +387,7 @@
           dy = this.getValueOfPropertyAt(lineIndex, charIndex, 'deltaY');
       topOffset += (1 - this._fontSizeFraction) * this.getHeightOfLine(lineIndex) / this.lineHeight
         - charHeight * (1 - this._fontSizeFraction);
+      // console.log('[renderCursor] cursorWidth', cursorWidth)
 
       if (this.inCompositionMode) {
         // 渲染选区？
@@ -396,6 +397,7 @@
       ctx.fillStyle = this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, 'fill');
       // 设置透明度，猜测是达到渐变的动效
       ctx.globalAlpha = this.__isMousedown ? 1 : this._currentCursorOpacity;
+      // 绘制光标
       ctx.fillRect(
         boundaries.left + boundaries.leftOffset - cursorWidth / 2,
         topOffset + boundaries.top + dy,
@@ -458,14 +460,14 @@
           var gradient = ctx.createLinearGradient(drawStart, 0, drawWidth, 0);
           // console.log('drawStart: ', drawStart);
           // console.log('drawWidth: ', drawWidth);
-          // gradient.addColorStop(0, 'rgba(44,99,255,1)');
-          // gradient.addColorStop(.25, 'rgba(208,48,48,1)');
-          // gradient.addColorStop(0.5, 'rgba(0,165,80,1)');
-          // gradient.addColorStop(0.75, 'rgba(232,118,38,1)');
-          // gradient.addColorStop(1, 'rgba(131,61,200,1)');
-          // ctx.fillStyle = gradient;
+          gradient.addColorStop(0, 'rgba(44,99,255,.5)');
+          gradient.addColorStop(.25, 'rgba(208,48,48,.5)');
+          gradient.addColorStop(0.5, 'rgba(0,165,80,.5)');
+          gradient.addColorStop(0.75, 'rgba(232,118,38,.5)');
+          gradient.addColorStop(1, 'rgba(131,61,200,.5)');
+          ctx.fillStyle = gradient;
 
-          ctx.fillStyle = this.selectionColor;
+          // ctx.fillStyle = this.selectionColor;
         }
         if (this.direction === 'rtl') {
           drawStart = this.width - drawStart - drawWidth;

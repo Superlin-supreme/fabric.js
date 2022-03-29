@@ -84,6 +84,7 @@
 
     /**
      * @private
+     * 触发鼠标动画
      */
     _tick: function() {
       this._currentTickState = this._animateCursor(this, 1, this.cursorDuration, '_onTickComplete');
@@ -102,6 +103,10 @@
           this.isAborted = true;
         },
       };
+
+      // console.log('[_animateCursor] targetOpacity', targetOpacity)
+      // console.log('[_animateCursor] duration', duration)
+      // console.log('[_animateCursor] obj.animate', obj.animate.toString())
 
       obj.animate('_currentCursorOpacity', targetOpacity, {
         duration: duration,
@@ -509,6 +514,7 @@
       this.cursorOffsetCache = { };
       // 设置文本值
       this.text = this.hiddenTextarea.value;
+      console.log('[updateFromTextArea] this.text: ', this.text);
       if (this._shouldClearDimensionCache()) {
         this.initDimensions();
         this.setCoords();
@@ -539,6 +545,7 @@
     /**
      * @private
      * @return {Object} style contains style for hiddenTextarea
+     * 计算 hiddenTextarea 的位置
      */
     _calcTextareaPosition: function() {
       if (!this.canvas) {

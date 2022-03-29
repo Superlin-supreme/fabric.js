@@ -28,7 +28,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     // ' paddingｰtop: ' + style.fontSize + ';';
     // 搞大一点看看
     this.hiddenTextarea.style.cssText = 'position: absolute; top: ' + style.top +
-    '; left: ' + style.left + '; z-index: 999; opacity: 1; width: 85px; height: 47px; font-size: 12px;' +
+    '; left: ' + style.left + '; z-index: 999; opacity: 1; width: 85px; height: 55px; font-size: 12px;' +
     ' paddingｰtop: ' + style.fontSize + ';';
 
     if (this.hiddenTextareaContainer) {
@@ -130,6 +130,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @param {Event} e Event object
    */
   onKeyDown: function(e) {
+    console.log('[onKeyDown] emit');
     if (!this.isEditing) {
       return;
     }
@@ -196,9 +197,10 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @param {Event} e Event object
    */
   onInput: function(e) {
+    console.log('[onInput] emit');
     // 新插入的文本是否来自粘贴
     var fromPaste = this.fromPaste;
-    console.log('[onInput] this.fromPaste: ', this.fromPaste);
+    // console.log('[onInput] this.fromPaste: ', this.fromPaste);
     this.fromPaste = false;
     e && e.stopPropagation();
     if (!this.isEditing) {
@@ -214,12 +216,12 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         selection = selectionStart !== selectionEnd, // 判断是否是选区，决定输入操作结果
         copiedStyle, removeFrom, removeTo;
 
-    console.log('[onInput] this.hiddenTextarea.value', this.hiddenTextarea.value);
+    // console.log('[onInput] this.hiddenTextarea.value', this.hiddenTextarea.value);
     // console.log('[onInput] this._text: ', this._text);
     // console.log('[onInput] nextText', nextText);
-    console.log('[onInput] charDiff', charDiff);
-    console.log('[onInput] this.selectionStart', this.selectionStart);
-    console.log('[onInput] this.selectionEnd', this.selectionEnd);
+    // console.log('[onInput] charDiff', charDiff);
+    // console.log('[onInput] this.selectionStart', this.selectionStart);
+    // console.log('[onInput] this.selectionEnd', this.selectionEnd);
 
     // 空文本
     if (this.hiddenTextarea.value === '') {
@@ -240,9 +242,9 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       this.hiddenTextarea.selectionEnd,
       this.hiddenTextarea.value
     );
-    console.log('[onInput] this.hiddenTextarea.selectionStart: ', this.hiddenTextarea.selectionStart);
-    console.log('[onInput] this.hiddenTextarea.selectionEnd: ', this.hiddenTextarea.selectionEnd);
-    console.log('[onInput] textareaSelection: ', textareaSelection);
+    // console.log('[onInput] this.hiddenTextarea.selectionStart: ', this.hiddenTextarea.selectionStart);
+    // console.log('[onInput] this.hiddenTextarea.selectionEnd: ', this.hiddenTextarea.selectionEnd);
+    // console.log('[onInput] textareaSelection: ', textareaSelection);
 
     // 判断是 backDelete 退格还是 forwardDelete 反退格
     var backDelete = selectionStart > textareaSelection.selectionStart;
@@ -260,8 +262,8 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     else if (nextCharCount < charCount) {
       // 退格、撤销都会走这里
       if (backDelete) {
-        console.log('[onInput] backDelete selectionEnd + charDiff: ', selectionEnd + charDiff);
-        console.log('[onInput] backDelete selectionEnd: ', selectionEnd);
+        // console.log('[onInput] backDelete selectionEnd + charDiff: ', selectionEnd + charDiff);
+        // console.log('[onInput] backDelete selectionEnd: ', selectionEnd);
         removedText = this._text.slice(selectionEnd + charDiff, selectionEnd);
       }
       else {
@@ -272,13 +274,13 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
          * macOS 没有intert键？: https://www.zhihu.com/question/43150799
          * 读完后面那条注释可以理解，是 forwardDelete，mac 上是 fn + delete
          */
-        console.log('[onInput] forwardDelete');
+        // console.log('[onInput] forwardDelete');
         removedText = this._text.slice(selectionStart, selectionStart - charDiff);
       }
     }
     // 获取插入的文本
     insertedText = nextText.slice(textareaSelection.selectionEnd - charDiff, textareaSelection.selectionEnd);
-    console.log('[onInput] insertedText: ', insertedText);
+    // console.log('[onInput] insertedText: ', insertedText);
     if (removedText && removedText.length) {
       if (insertedText.length) {
         // let's copy some style before deleting.
@@ -286,7 +288,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         // is bigger than 0.
         // 在删除前，处理下样式
         copiedStyle = this.getSelectionStyles(selectionStart, selectionStart + 1, false);
-        console.log('[onInput] copiedStyle: ', copiedStyle);
+        // console.log('[onInput] copiedStyle: ', copiedStyle);
         // now duplicate the style one for each inserted text.
         // 复制插入文本的样式
         copiedStyle = insertedText.map(function() {
@@ -308,7 +310,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         removeFrom = selectionEnd;
         removeTo = selectionEnd + removedText.length;
       }
-      console.log('[onInput] removeFrom, removeTo: ', removeFrom, removeTo);
+      // console.log('[onInput] removeFrom, removeTo: ', removeFrom, removeTo);
       /**
        * @ToRead
        * 猜测是和删除后光标位置输入文本的样式有关
@@ -353,6 +355,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * Composition end
    */
   onCompositionEnd: function() {
+    console.log('onCompositionEnd emit');
     this.inCompositionMode = false;
   },
 
