@@ -95,6 +95,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * find selectionEnd, initialize the drawing of either cursor or selection area
    * initializing a mousedDown on a text area will cancel fabricjs knowledge of
    * current compositionMode. It will be set to false.
+   * 鼠标按下事件 mousedown 处理
    */
   _mouseDownHandler: function(options) {
     if (!this.canvas || !this.editable || (options.e.button && options.e.button !== 1)) {
@@ -103,7 +104,8 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
     // 鼠标按下标记，会用在鼠标移动的情况
     this.__isMousedown = true;
-
+    
+    // 如果图层被选中，设置光标位置
     if (this.selected) {
       this.inCompositionMode = false;
       this.setCursorByClick(options.e);
@@ -111,9 +113,11 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
     if (this.isEditing) {
       this.__selectionStartOnMouseDown = this.selectionStart;
+      // 如果是光标，禁掉光标的动画
       if (this.selectionStart === this.selectionEnd) {
         this.abortCursorAnimation();
       }
+      // 渲染光标/选区
       this.renderCursorOrSelection();
     }
   },
@@ -200,6 +204,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       this.selectionStart = newSelection;
       this.selectionEnd = newSelection;
     }
+    // 如果处于编辑状态，更新选区和 hiddenTextarea
     if (this.isEditing) {
       this._fireSelectionChanged();
       this._updateTextarea();
