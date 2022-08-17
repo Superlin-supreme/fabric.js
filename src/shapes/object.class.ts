@@ -1204,6 +1204,7 @@ import { Point } from '../point.class';
      */
     drawObject: function(ctx, forClipping) {
       var originalFill = this.fill, originalStroke = this.stroke;
+
       if (forClipping) {
         this.fill = 'black';
         this.stroke = '';

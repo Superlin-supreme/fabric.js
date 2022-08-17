@@ -373,6 +373,7 @@ import { DEFAULT_SVG_FONT_SIZE } from "../constants";
       // 为什么又设置一遍
       this.__skipDimension = false;
       this.initDimensions();
+      // 初始化控制器设置
       this.setCoords();
       this.setupState({ propertySet: '_dimensionAffectingProps' });
     },
@@ -432,7 +433,9 @@ import { DEFAULT_SVG_FONT_SIZE } from "../constants";
       if (this.__skipDimension) {
         return;
       }
+      // 分割文本
       this._splitText();
+      // 清理文本行宽行高文字 bounding 等数据
       this._clearCache();
       if (this.path) {
         this.width = this.path.width;
@@ -443,6 +446,8 @@ import { DEFAULT_SVG_FONT_SIZE } from "../constants";
         this.height = this.calcTextHeight();
       }
       if (this.textAlign.indexOf('justify') !== -1) {
+        // 如果 text-align 设置了 justify
+        // 需要获取每一行文本的宽度，然后通过调整每个 text 的 charBound 来使其塞满一行
         // once text is measured we need to make space fatter to make justified text.
         this.enlargeSpaces();
       }
@@ -1331,6 +1336,7 @@ import { DEFAULT_SVG_FONT_SIZE } from "../constants";
     },
 
     /**
+     * 获取当前文本 lineIndex 行的行宽
      * Measure a single line given its index. Used to calculate the initial
      * text bounding box. The values are calculated and stored in __lineWidths cache.
      * @private
@@ -1525,7 +1531,6 @@ import { DEFAULT_SVG_FONT_SIZE } from "../constants";
      * @returns {Array} Lines in the text
      */
     _splitTextIntoLines: function(text) {
-      // console.log('text _splitTextIntoLines: ', text);
       var lines = text.split(this._reNewline),
           newLines = new Array(lines.length),
           newLine = ['\n'],

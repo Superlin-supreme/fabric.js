@@ -612,7 +612,9 @@ import { removeFromArray } from './util/internals';
      * @param {fabric.Object} obj Object that was added
      */
     _onObjectAdded: function(obj) {
+      // 判断是否是一个状态的 cavans，是的话给 obj 初始化状态
       this.stateful && obj.setupState();
+      // 判断 obj 有没有被其他 canvas 使用，有的话需要先 remove 掉再重新 add
       if (obj.canvas && obj.canvas !== this) {
         /* _DEV_MODE_START_ */
         console.warn('fabric.Canvas: trying to add an object that belongs to a different canvas.\n' +
@@ -622,6 +624,8 @@ import { removeFromArray } from './util/internals';
       }
       obj._set('canvas', this);
       obj.setCoords();
+
+      // 触发事件
       // console.log('[_onObjectAdded] obj: ', obj);
       this.fire('object:added', { target: obj });
       obj.fire('added', { target: this });
@@ -700,6 +704,7 @@ import { removeFromArray } from './util/internals';
      * @chainable
      */
     renderAndReset: function() {
+      // 因为 render 是同步操作，因此可以提前将状态重置
       this.isRendering = 0;
       this.renderAll();
     },
@@ -757,6 +762,7 @@ import { removeFromArray } from './util/internals';
      * @chainable
      */
     renderCanvas: function(ctx, objects) {
+      console.log('已经 add 的 objects：', objects)
       var v = this.viewportTransform, path = this.clipPath;
       this.cancelRequestedRender();
       this.calcViewportBoundaries();
