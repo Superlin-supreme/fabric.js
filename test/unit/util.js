@@ -90,6 +90,20 @@
     assert.deepEqual(fabric.util.radiansToDegrees(), NaN);
   });
 
+  QUnit.test('calcRotateMatrix', function (assert) {
+    assert.ok(typeof fabric.util.calcRotateMatrix === 'function', 'calcRotateMatrix should exist');
+    var matrix = fabric.util.calcRotateMatrix({ angle: 90 });
+    var expected = [
+      0,
+      1,
+      -1,
+      0,
+      0,
+      0
+    ];
+    assert.deepEqual(matrix, expected, 'rotate matrix is equal');
+  });
+
   QUnit.test('fabric.util.getRandomInt', function(assert) {
     assert.ok(typeof fabric.util.getRandomInt === 'function');
 
@@ -105,11 +119,6 @@
     });
 
     assert.ok(!areAllTheSame);
-  });
-
-  QUnit.test('fabric.util.falseFunction', function(assert) {
-    assert.ok(typeof fabric.util.falseFunction === 'function');
-    assert.equal(fabric.util.falseFunction(), false);
   });
 
   QUnit.test('String.prototype.trim', function(assert) {
@@ -361,8 +370,9 @@
     el.appendChild(fabric.document.createTextNode('foo'));
 
     assert.equal(el, makeElementUnselectable(el), 'should be "chainable"');
+
     if (typeof el.onselectstart !== 'undefined') {
-      assert.equal(el.onselectstart, fabric.util.falseFunction);
+      assert.equal(el.onselectstart.toString(), (() => false).toString());
     }
 
     // not sure if it's a good idea to test implementation details here
@@ -489,13 +499,23 @@
     }
   });
 
-
   QUnit.test('fabric.util.loadImage with url for a non exsiting image', function(assert) {
     var done = assert.async();
     fabric.util.loadImage(IMG_URL_NON_EXISTING).catch(function(err) {
       assert.ok(err instanceof Error, 'callback should be invoked with error set to true');
       done();
     });
+  });
+
+  QUnit.test('fabric.util.loadImage with AbortController', function (assert) {
+    var done = assert.async();
+    var abortController = new AbortController();
+    fabric.util.loadImage(IMG_URL, { signal: abortController.signal })
+      .catch(function (err) {
+        assert.equal(err.type, 'abort', 'should be an abort event');
+        done();
+      });
+    abortController.abort();
   });
 
   var SVG_WITH_1_ELEMENT = '<?xml version="1.0"?>\
@@ -691,12 +711,6 @@
     assert.equal(fabric.util.getKlass('Sepia2', 'fabric.Image.filters'), fabric.Image.filters.Sepia2);
   });
 
-  QUnit.test('resolveNamespace', function(assert) {
-    assert.equal(fabric.util.resolveNamespace('fabric'), fabric);
-    assert.equal(fabric.util.resolveNamespace('fabric.Image'), fabric.Image);
-    assert.equal(fabric.util.resolveNamespace('fabric.Image.filters'), fabric.Image.filters);
-  });
-
   QUnit.test('clearFabricFontCache', function(assert) {
     assert.ok(typeof fabric.util.clearFabricFontCache === 'function');
     fabric.charWidthsCache = { arial: { some: 'cache'}, helvetica: { some: 'cache'} };
@@ -833,6 +847,143 @@
     var tp = fabric.util.transformPoint(point, matrix);
     assert.equal(Math.round(tp.x), 16);
     assert.equal(Math.round(tp.y), 8);
+  });
+
+  /**
+   * 
+   * @param {*} actual 
+   * @param {*} expected 
+   * @param {*} [message] 
+   * @param {number} [error] floating point percision, defaults to 10
+   */
+  QUnit.assert.matrixIsEqualEnough = function (actual, expected, message, error) {
+    var error = Math.pow(10, error ? -error : -10);
+    this.pushResult({
+      result: actual.every((x, i) => Math.abs(x - expected[i]) < error),
+      actual: actual,
+      expected: expected,
+      message: message
+    })
+  }
+
+  QUnit.test('sendPointToPlane', function (assert) {
+    assert.ok(typeof fabric.util.sendPointToPlane === 'function');
+    var m1 = [3, 0, 0, 2, 10, 4],
+      m2 = [1, 2, 3, 4, 5, 6],
+      p, t,
+      obj1 = new fabric.Object(),
+      obj2 = new fabric.Object(),
+      point = new fabric.Point(2, 2),
+      applyTransformToObject = fabric.util.applyTransformToObject,
+      invert = fabric.util.invertTransform,
+      multiply = fabric.util.multiplyTransformMatrices,
+      transformPoint = fabric.util.transformPoint;
+    
+    function sendPointToPlane(point, from, to, relationFrom, relationTo) {
+      return fabric.util.sendPointToPlane(
+        point,
+        from ?
+          relationFrom === 'child' ? from.calcTransformMatrix() : from.group?.calcTransformMatrix() :
+          null,
+        to ?
+          relationTo === 'child' ? to.calcTransformMatrix() : to.group?.calcTransformMatrix() :
+          null
+      );
+    }
+
+    applyTransformToObject(obj1, m1);
+    applyTransformToObject(obj2, m2);
+    obj1.group = new fabric.Object();
+    obj2.group = new fabric.Object();
+    applyTransformToObject(obj1.group, m1);
+    applyTransformToObject(obj2.group, m2);
+    p = sendPointToPlane(point, obj1, obj2, 'child', 'child');
+    t = multiply(invert(obj2.calcTransformMatrix()), obj1.calcTransformMatrix());
+    assert.deepEqual(p, transformPoint(point, t));
+    p = sendPointToPlane(point, obj1, obj2, 'sibling', 'child');
+    t = multiply(invert(obj2.calcTransformMatrix()), obj1.group.calcTransformMatrix());
+    assert.deepEqual(p, transformPoint(point, t));
+    p = sendPointToPlane(point, obj1, obj2, 'child', 'sibling');
+    t = multiply(invert(obj2.group.calcTransformMatrix()), obj1.calcTransformMatrix());
+    assert.deepEqual(p, transformPoint(point, t));
+    p = sendPointToPlane(point, obj1, obj2, 'sibling', 'sibling');
+    t = multiply(invert(obj2.group.calcTransformMatrix()), obj1.group.calcTransformMatrix());
+    assert.deepEqual(p, transformPoint(point, t));
+    p = sendPointToPlane(point, null, obj2, null, 'sibling');
+    t = invert(obj2.group.calcTransformMatrix());
+    assert.deepEqual(p, transformPoint(point, t));
+
+    var obj = new fabric.Rect({ left: 20, top: 20, width: 60, height: 60, strokeWidth: 0 });
+    var group = new fabric.Group([obj], { strokeWidth: 0 });
+    var sentPoint = sendPointToPlane(new fabric.Point(50, 50), null, obj, null, 'sibling');
+    assert.deepEqual(sentPoint, new fabric.Point(0, 0));
+    sentPoint = sendPointToPlane(new fabric.Point(50, 50), null, group, null, 'child');
+    assert.deepEqual(sentPoint, new fabric.Point(0, 0));
+    group.scaleX = 2;
+    sentPoint = sendPointToPlane(new fabric.Point(80, 50), null, obj, null, 'sibling');
+    assert.deepEqual(sentPoint, new fabric.Point(0, 0));
+    sentPoint = sendPointToPlane(new fabric.Point(80, 50), null, group, null, 'child');
+    assert.deepEqual(sentPoint, new fabric.Point(0, 0));
+    assert.deepEqual(sendPointToPlane(point), point, 'sending to nowhere, point remains unchanged');
+  });
+
+  QUnit.test('transformPointRelativeToCanvas', function(assert) {
+    assert.ok(typeof fabric.util.transformPointRelativeToCanvas === 'function');
+    var point = new fabric.Point(2, 2);
+    var matrix = [3, 0, 0, 2, 10, 4];
+    var canvas = {
+      viewportTransform: matrix
+    }
+    var transformPoint = fabric.util.transformPoint;
+    var invertTransform = fabric.util.invertTransform;
+    var transformPointRelativeToCanvas = fabric.util.transformPointRelativeToCanvas;
+    var p = transformPointRelativeToCanvas(point, canvas, 'sibling', 'child');
+    assert.deepEqual(p, transformPoint(point, invertTransform(matrix)));
+    p = transformPointRelativeToCanvas(point, canvas, 'child', 'sibling');
+    assert.deepEqual(p, transformPoint(point, matrix));
+    p = transformPointRelativeToCanvas(point, canvas, 'child', 'child');
+    assert.deepEqual(p, point);
+    p = transformPointRelativeToCanvas(point, canvas, 'sibling', 'sibling');
+    assert.deepEqual(p, point);
+    assert.throws(function () {
+      transformPointRelativeToCanvas(point, canvas, 'sibling');
+    });
+    assert.throws(function () {
+      transformPointRelativeToCanvas(point, canvas, 'sibling', true);
+    });
+    assert.throws(function () {
+      transformPointRelativeToCanvas(point, canvas, 'sibling', 'chil');
+    });
+  });
+
+  QUnit.test('sendObjectToPlane', function (assert) {
+    assert.ok(typeof fabric.util.sendObjectToPlane === 'function');
+    var m = [6, Math.SQRT1_2, 0, 3, 2, 1],
+      m1 = [3, 0, 0, 2, 10, 4],
+      m2 = [1, Math.SQRT1_2, Math.SQRT1_2, 4, 5, 6],
+      actual, expected,
+      obj1 = new fabric.Object(),
+      obj2 = new fabric.Object(),
+      obj = new fabric.Object(),
+      sendObjectToPlane = fabric.util.sendObjectToPlane,
+      applyTransformToObject = fabric.util.applyTransformToObject,
+      invert = fabric.util.invertTransform,
+      multiply = fabric.util.multiplyTransformMatrices;
+    //  silence group check
+    obj1.isOnACache = () => false;
+
+    applyTransformToObject(obj, m);
+    applyTransformToObject(obj1, m1);
+    applyTransformToObject(obj2, m2);
+    obj.group = obj1;
+    actual = sendObjectToPlane(obj, obj1.calcTransformMatrix(), obj2.calcTransformMatrix());
+    expected = multiply(invert(obj2.calcTransformMatrix()), obj1.calcTransformMatrix());
+    assert.matrixIsEqualEnough(actual, expected);
+    assert.matrixIsEqualEnough(obj.calcOwnMatrix(), multiply(actual, m));
+    obj.group = obj2;
+    assert.matrixIsEqualEnough(obj.calcTransformMatrix(), multiply(multiply(obj2.calcTransformMatrix(), actual), m));
+    assert.deepEqual(sendObjectToPlane(obj2), fabric.iMatrix, 'sending to nowhere, no transform was applied');
+    assert.matrixIsEqualEnough(obj2.calcOwnMatrix(), m2, 'sending to nowhere, no transform was applied');
   });
 
   QUnit.test('makeBoundingBoxFromPoints', function(assert) {

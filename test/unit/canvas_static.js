@@ -188,13 +188,22 @@
       canvas.overlayColor = fabric.StaticCanvas.prototype.overlayColor;
       canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
       canvas.calcOffset();
+      canvas.requestRenderAll = fabric.StaticCanvas.prototype.requestRenderAll;
       canvas.cancelRequestedRender();
       canvas2.cancelRequestedRender();
+      canvas.renderOnAddRemove = false;
+      canvas2.renderOnAddRemove = false;
     },
     afterEach: function() {
       canvas.cancelRequestedRender();
       canvas2.cancelRequestedRender();
     }
+  });
+
+  QUnit.test('prevent multiple canvas initialization', function (assert) {
+    var canvas = new fabric.StaticCanvas();
+    assert.ok(canvas.lowerCanvasEl);
+    assert.throws(() => new fabric.StaticCanvas(canvas.lowerCanvasEl));
   });
 
   QUnit.test('initialProperties', function(assert) {
@@ -241,6 +250,7 @@
 
     assert.deepEqual(canvas.getObjects('rect'), [rect], 'should return rect only');
     assert.deepEqual(canvas.getObjects('circle'), [circle], 'should return circle only');
+    assert.deepEqual(canvas.getObjects('circle', 'rect'), [rect, circle], 'should return rect and circle');
   });
 
   QUnit.test('getElement', function(assert) {
@@ -265,33 +275,79 @@
     var rect1 = makeRect(),
         rect2 = makeRect(),
         rect3 = makeRect(),
-        rect4 = makeRect();
+        rect4 = makeRect(),
+        renderAllCount = 0;
 
+    function countRenderAll() {
+      renderAllCount++;
+    }
+    canvas.renderOnAddRemove = true;
+    canvas.requestRenderAll = countRenderAll;
     assert.ok(typeof canvas.add === 'function');
     assert.equal(canvas.add(rect1), canvas, 'should be chainable');
     assert.strictEqual(canvas.item(0), rect1);
+    assert.equal(renderAllCount, 1);
 
     canvas.add(rect2, rect3, rect4);
     assert.equal(canvas.getObjects().length, 4, 'should support multiple arguments');
+    assert.equal(renderAllCount, 2);
+
+    canvas.add();
+    assert.equal(renderAllCount, 2);
 
     assert.strictEqual(canvas.item(1), rect2);
     assert.strictEqual(canvas.item(2), rect3);
     assert.strictEqual(canvas.item(3), rect4);
   });
 
+  QUnit.test('add an object that belongs to a different canvas', function (assert) {
+    var rect1 = makeRect();
+    var control = [];
+    canvas.on('object:added', (opt) => {
+      control.push({
+        action: 'added',
+        canvas: canvas,
+        target: opt.target
+      });
+    });
+    canvas.on('object:removed', (opt) => {
+      control.push({
+        action: 'removed',
+        canvas: canvas,
+        target: opt.target
+      });
+    });
+    canvas2.on('object:added', (opt) => {
+      control.push({
+        action: 'added',
+        canvas: canvas2,
+        target: opt.target
+      });
+    });
+    canvas.add(rect1);
+    assert.strictEqual(canvas.item(0), rect1);
+    canvas2.add(rect1);
+    assert.equal(canvas.item(0), undefined);
+    assert.equal(canvas.size(), 0);
+    assert.strictEqual(canvas2.item(0), rect1);
+    var expected = [
+      { action: 'added', target: rect1, canvas: canvas },
+      { action: 'removed', target: rect1, canvas: canvas },
+      { action: 'added', target: rect1, canvas: canvas2 },
+    ]
+    assert.deepEqual(control, expected);
+  });
+
   QUnit.test('add renderOnAddRemove disabled', function(assert) {
     var rect = makeRect(),
-        originalRenderOnAddition,
         renderAllCount = 0;
 
     function countRenderAll() {
       renderAllCount++;
     }
 
-    originalRenderOnAddition = canvas.renderOnAddRemove;
     canvas.renderOnAddRemove = false;
-
-    canvas.on('after:render', countRenderAll);
+    canvas.requestRenderAll = countRenderAll;
 
     assert.equal(canvas.add(rect), canvas, 'should be chainable');
     assert.equal(renderAllCount, 0);
@@ -301,12 +357,6 @@
     canvas.add(makeRect(), makeRect(), makeRect());
     assert.equal(canvas.getObjects().length, 4, 'should support multiple arguments');
     assert.equal(renderAllCount, 0);
-
-    canvas.renderAll();
-    assert.equal(renderAllCount, 1);
-
-    canvas.off('after:render', countRenderAll);
-    canvas.renderOnAddRemove = originalRenderOnAddition;
   });
 
   QUnit.test('object:added', function(assert) {
@@ -337,34 +387,41 @@
 
   QUnit.test('insertAt', function(assert) {
     var rect1 = makeRect(),
-        rect2 = makeRect();
+        rect2 = makeRect(),
+        renderAllCount = 0;
 
     canvas.add(rect1, rect2);
 
     assert.ok(typeof canvas.insertAt === 'function', 'should respond to `insertAt` method');
 
+    function countRenderAll() {
+      renderAllCount++;
+    }
+    canvas.requestRenderAll = countRenderAll;
+    canvas.renderOnAddRemove = true;
+    assert.equal(renderAllCount, 0);
     var rect = makeRect();
     canvas.insertAt(rect, 1);
+    assert.equal(renderAllCount, 1);
     assert.strictEqual(canvas.item(1), rect);
     canvas.insertAt(rect, 2);
+    assert.equal(renderAllCount, 2);
     assert.strictEqual(canvas.item(2), rect);
     assert.equal(canvas.insertAt(rect, 2), canvas, 'should be chainable');
+    assert.equal(renderAllCount, 3);
   });
 
   QUnit.test('insertAt renderOnAddRemove disabled', function(assert) {
     var rect1 = makeRect(),
         rect2 = makeRect(),
-        originalRenderOnAddition,
         renderAllCount = 0;
 
     function countRenderAll() {
       renderAllCount++;
     }
 
-    originalRenderOnAddition = canvas.renderOnAddRemove;
     canvas.renderOnAddRemove = false;
-
-    canvas.on('after:render', countRenderAll);
+    canvas.requestRenderAll = countRenderAll;
 
     canvas.add(rect1, rect2);
     assert.equal(renderAllCount, 0);
@@ -377,47 +434,46 @@
     assert.strictEqual(canvas.item(1), rect);
     canvas.insertAt(rect, 2);
     assert.equal(renderAllCount, 0);
-
-    canvas.renderAll();
-    assert.equal(renderAllCount, 1);
-
-    canvas.off('after:render', countRenderAll);
-    canvas.renderOnAddRemove = originalRenderOnAddition;
   });
 
   QUnit.test('remove', function(assert) {
     var rect1 = makeRect(),
         rect2 = makeRect(),
         rect3 = makeRect(),
-        rect4 = makeRect();
-
-    canvas.add(rect1, rect2, rect3, rect4);
-
-    assert.ok(typeof canvas.remove === 'function');
-    assert.equal(canvas.remove(rect1), canvas, 'should be chainable');
-    assert.strictEqual(canvas.item(0), rect2, 'should be second object');
-
-    canvas.remove(rect2, rect3);
-    assert.strictEqual(canvas.item(0), rect4);
-
-    canvas.remove(rect4);
-    assert.equal(canvas.isEmpty(), true, 'canvas should be empty');
-  });
-
-  QUnit.test('remove renderOnAddRemove disabled', function(assert) {
-    var rect1 = makeRect(),
-        rect2 = makeRect(),
-        originalRenderOnAddition,
+        rect4 = makeRect(),
         renderAllCount = 0;
 
     function countRenderAll() {
       renderAllCount++;
     }
 
-    originalRenderOnAddition = canvas.renderOnAddRemove;
-    canvas.renderOnAddRemove = false;
+    canvas.add(rect1, rect2, rect3, rect4);
+    canvas.requestRenderAll = countRenderAll;
+    canvas.renderOnAddRemove = true;
+    assert.ok(typeof canvas.remove === 'function');
+    assert.equal(renderAllCount, 0);
+    assert.equal(canvas.remove(rect1), canvas, 'should be chainable');
+    assert.strictEqual(canvas.item(0), rect2, 'should be second object');
 
-    canvas.on('after:render', countRenderAll);
+    canvas.remove(rect2, rect3);
+    assert.equal(renderAllCount, 2);
+    assert.strictEqual(canvas.item(0), rect4);
+
+    canvas.remove(rect4);
+    assert.equal(renderAllCount, 3);
+    assert.equal(canvas.isEmpty(), true, 'canvas should be empty');
+  });
+
+  QUnit.test('remove renderOnAddRemove disabled', function(assert) {
+    var rect1 = makeRect(),
+        rect2 = makeRect(),
+        renderAllCount = 0;
+
+    function countRenderAll() {
+      renderAllCount++;
+    }
+    canvas.requestRenderAll = countRenderAll;
+    canvas.renderOnAddRemove = false;
 
     canvas.add(rect1, rect2);
     assert.equal(renderAllCount, 0);
@@ -425,12 +481,6 @@
     assert.equal(canvas.remove(rect1), canvas, 'should be chainable');
     assert.equal(renderAllCount, 0);
     assert.strictEqual(canvas.item(0), rect2, 'only second object should be left');
-
-    canvas.renderAll();
-    assert.equal(renderAllCount, 1);
-
-    canvas.off('after:render', countRenderAll);
-    canvas.renderOnAddRemove = originalRenderOnAddition;
   });
 
   QUnit.test('object:removed', function(assert) {
@@ -961,7 +1011,7 @@
 
   QUnit.test('toJSON', function(assert) {
     assert.ok(typeof canvas.toJSON === 'function');
-    assert.equal(JSON.stringify(canvas.toJSON()), '{"version":"' + fabric.version + '","objects":[]}');
+    assert.equal(JSON.stringify(canvas), '{"version":"' + fabric.version + '","objects":[]}');
     canvas.backgroundColor = '#ff5555';
     canvas.overlayColor = 'rgba(0,0,0,0.2)';
     assert.equal(JSON.stringify(canvas.toJSON()), '{"version":"' + fabric.version + '","objects":[],"background":"#ff5555","overlay":"rgba(0,0,0,0.2)"}', '`background` and `overlay` value should be reflected in json');
@@ -977,7 +1027,7 @@
 
     canvas.bar = 456;
 
-    var data = canvas.toJSON(['padding', 'foo', 'bar', 'baz']);
+    var data = canvas.toObject(['padding', 'foo', 'bar', 'baz']);
     assert.ok('padding' in data.objects[0]);
     assert.ok('foo' in data.objects[0], 'foo shouldn\'t be included if it\'s not in an object');
     assert.ok(!('bar' in data.objects[0]), 'bar shouldn\'t be included if it\'s not in an object');
@@ -1009,7 +1059,7 @@
     createImageObject(function(image) {
       canvas.backgroundImage = image;
       image.custom = 'yes';
-      var json = canvas.toJSON(['custom']);
+      var json = canvas.toObject(['custom']);
       assert.equal(json.backgroundImage.custom, 'yes');
       canvas.backgroundImage = null;
       done();
@@ -1038,7 +1088,7 @@
     createImageObject(function(image) {
       canvas.overlayImage = image;
       image.custom = 'yes';
-      var json = canvas.toJSON(['custom']);
+      var json = canvas.toObject(['custom']);
       assert.equal(json.overlayImage.custom, 'yes');
       canvas.overlayImage = null;
       done();
@@ -1278,6 +1328,21 @@
     });
   });
 
+  QUnit.test('loadFromJSON with AbortController', function (assert) {
+    var done = assert.async();
+    assert.expect(1);
+    var serialized = JSON.parse(PATH_JSON);
+    serialized.background = 'green';
+    serialized.backgroundImage = { "type": "image", "originX": "left", "originY": "top", "left": 13.6, "top": -1.4, "width": 3000, "height": 3351, "fill": "rgb(0,0,0)", "stroke": null, "strokeWidth": 0, "strokeDashArray": null, "strokeLineCap": "butt", "strokeDashOffset": 0, "strokeLineJoin": "miter", "strokeMiterLimit": 4, "scaleX": 0.05, "scaleY": 0.05, "angle": 0, "flipX": false, "flipY": false, "opacity": 1, "shadow": null, "visible": true, "backgroundColor": "", "fillRule": "nonzero", "globalCompositeOperation": "source-over", "skewX": 0, "skewY": 0, "src": IMG_SRC, "filters": [], "crossOrigin": "" };
+    var abortController = new AbortController();
+    canvas.loadFromJSON(serialized, null, { signal: abortController.signal })
+      .catch(function (err) {
+        assert.equal(err.type, 'abort', 'should be an abort event');
+        done();
+      });
+    abortController.abort();
+  });
+
   QUnit.test('loadFromJSON custom properties', function(assert) {
     var done = assert.async();
     var rect = new fabric.Rect({ width: 10, height: 20 });
@@ -1286,8 +1351,8 @@
 
     canvas.add(rect);
 
-    var jsonWithoutFoo = JSON.stringify(canvas.toJSON(['padding']));
-    var jsonWithFoo = JSON.stringify(canvas.toJSON(['padding', 'foo']));
+    var jsonWithoutFoo = JSON.stringify(canvas.toObject(['padding']));
+    var jsonWithFoo = JSON.stringify(canvas.toObject(['padding', 'foo']));
 
     assert.equal(jsonWithFoo, RECT_JSON_WITH_PADDING);
     assert.ok(jsonWithoutFoo !== RECT_JSON_WITH_PADDING);
@@ -1555,9 +1620,12 @@
     var canvas2 = new fabric.StaticCanvas(null, { renderOnAddRemove: false });
     assert.ok(typeof canvas2.dispose === 'function');
     canvas2.add(makeRect(), makeRect(), makeRect());
+    var lowerCanvas = canvas2.lowerCanvasEl;
+    assert.equal(lowerCanvas.getAttribute('data-fabric'), 'main', 'lowerCanvasEl should be marked by fabric');
     canvas2.dispose();
     assert.equal(canvas2.getObjects().length, 0, 'dispose should clear canvas');
     assert.equal(canvas2.lowerCanvasEl, null, 'dispose should clear lowerCanvasEl');
+    assert.equal(lowerCanvas.hasAttribute('data-fabric'), false, 'dispose should clear lowerCanvasEl data-fabric attr');
     assert.equal(canvas2.contextContainer, null, 'dispose should clear contextContainer');
   });
 
@@ -1794,6 +1862,16 @@
     assert.deepEqual(canvas.vptCoords.tr, new fabric.Point(30 + canvas.getWidth() / 2, -30), 'tl is 0,0');
     assert.deepEqual(canvas.vptCoords.bl, new fabric.Point(30, canvas.getHeight() / 2 - 30), 'tl is 0,0');
     assert.deepEqual(canvas.vptCoords.br, new fabric.Point(30 + canvas.getWidth() / 2, canvas.getHeight() / 2 - 30), 'tl is 0,0');
+  });
+
+  QUnit.test('calcViewportBoundaries with flipped zoom and translation', function (assert) {
+    assert.ok(typeof canvas.calcViewportBoundaries === 'function');
+    canvas.setViewportTransform([2, 0, 0, -2, -60, 60]);
+    canvas.calcViewportBoundaries();
+    assert.deepEqual({ x: canvas.vptCoords.tl.x, y: canvas.vptCoords.tl.y }, { x: 30, y: -145 }, 'tl is 30, -145');
+    assert.deepEqual({ x: canvas.vptCoords.tr.x, y: canvas.vptCoords.tr.y }, { x: 130, y: -145 }, 'tr is 130, -145');
+    assert.deepEqual({ x: canvas.vptCoords.bl.x, y: canvas.vptCoords.bl.y }, { x: 30,  y: 30 }, 'bl is 30,-70');
+    assert.deepEqual({ x: canvas.vptCoords.br.x, y: canvas.vptCoords.br.y }, { x: 130,  y: 30 }, 'br is 130,-70');
   });
 
   QUnit.test('_isRetinaScaling', function(assert) {

@@ -61,16 +61,20 @@
     return fabric.isLikelyNode ? localPath('/..', finalName) : getAbsolutePath('/test' + finalName);
   }
 
+  function generateGolden(filename, original) {
+    if (fabric.isLikelyNode && original) {
+      var plainFileName = filename.replace('file://', '');
+      var dataUrl = original.toDataURL().split(',')[1];
+      console.log('creating original for ', filename);
+      fs.writeFileSync(plainFileName, dataUrl, { encoding: 'base64' });
+    }
+  }
+
   function getImage(filename, original, callback) {
     if (fabric.isLikelyNode && original) {
       var plainFileName = filename.replace('file://', '');
-      try {
-        fs.statSync(plainFileName);
-      }
-      catch (err) {
-        var dataUrl = original.toDataURL().split(',')[1];
-        console.log('creating original for ', filename);
-        fs.writeFileSync(plainFileName, dataUrl, { encoding: 'base64' });
+      if (!fs.existsSync(plainFileName)) {
+        generateGolden(filename, original);
       }
     }
     var img = fabric.document.createElement('img');
@@ -130,7 +134,7 @@
           var width = renderedCanvas.width;
           var height = renderedCanvas.height;
           var totalPixels = width * height;
-          var imageDataCanvas = renderedCanvas.getContext('2d').getImageData(0, 0, width, height).data;
+          var imageDataCanvas = renderedCanvas.getContext('2d').getImageData(0, 0, width, height);
           var canvas = fabric.document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
@@ -141,24 +145,28 @@
             visualCallback.addArguments({
               enabled: true,
               golden: canvas,
-              fabric: renderedCanvas,
-              diff: output
+              fabric: imageDataCanvas,
+              diff: output,
+              goldenName: golden
             });
             var imageDataGolden = ctx.getImageData(0, 0, width, height).data;
-            var differentPixels = _pixelMatch(imageDataCanvas, imageDataGolden, output.data, width, height, pixelmatchOptions);
+            var differentPixels = _pixelMatch(imageDataCanvas.data, imageDataGolden, output.data, width, height, pixelmatchOptions);
             var percDiff = differentPixels / totalPixels * 100;
             var okDiff = totalPixels * percentage;
-            var isOK = differentPixels < okDiff;
+            var isOK = differentPixels <= okDiff;
             assert.ok(
               isOK,
-              testName + ' has too many different pixels ' + differentPixels + '(' + okDiff + ') representing ' + percDiff + '%'
+              testName + ' [' + golden + '] has too many different pixels ' + differentPixels + '(' + okDiff + ') representing ' + percDiff + '% (>' + (percentage * 100) + '%)'
             );
             if (!isOK) {
               var stringa = imageDataToChalk(output);
               console.log(stringa);
             }
-            done();
+            if ((!isOK && QUnit.debugVisual) || QUnit.recreateVisualRefs) {
+              generateGolden(getGoldeName(golden), renderedCanvas);
+            }
             fabricCanvas.dispose();
+            done();
           });
         });
       });

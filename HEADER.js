@@ -1,5 +1,7 @@
 /*! Fabric.js Copyright 2008-2015, Printio (Juriy Zaytsev, Maxim Chernyak) */
 
+import { iMatrix } from './src/constants';
+
 var fabric = fabric || { version: '5.1.0' };
 if (typeof exports !== 'undefined') {
   exports.fabric = fabric;
@@ -17,6 +19,7 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
     fabric.document = document.implementation.createHTMLDocument('');
   }
   fabric.window = window;
+  window.fabric = fabric;
 }
 else {
   // assume we're running under node.js when document/window are not present
@@ -33,7 +36,7 @@ else {
   fabric.jsdomImplForWrapper = require('jsdom/lib/jsdom/living/generated/utils').implForWrapper;
   fabric.nodeCanvas = require('jsdom/lib/jsdom/utils').Canvas;
   fabric.window = virtualWindow;
-  DOMParser = fabric.window.DOMParser;
+  global.DOMParser = fabric.window.DOMParser;
 }
 
 /**
@@ -72,13 +75,10 @@ fabric.SHARED_ATTRIBUTES = [
  * Pixel per Inch as a default value set to 96. Can be changed for more realistic conversion.
  */
 fabric.DPI = 96;
-fabric.reNum = '(?:[-+]?(?:\\d+|\\d*\\.\\d+)(?:[eE][-+]?\\d+)?)';
-fabric.commaWsp = '(?:\\s+,?\\s*|,\\s*)';
-fabric.rePathCommand = /([-+]?((\d+\.\d+)|((\d+)|(\.\d+)))(?:[eE][-+]?\d+)?)/ig;
 fabric.reNonWord = /[ \n\.,;!\?\-]/;
 fabric.fontPaths = { };
-fabric.iMatrix = [1, 0, 0, 1, 0, 0];
-fabric.svgNS = 'http://www.w3.org/2000/svg';
+fabric.iMatrix = iMatrix;
+
 
 /**
  * Pixel limit for cache canvases. 1Mpx , 4Mpx should be fine.
@@ -201,3 +201,5 @@ fabric.initFilterBackend = function() {
     return (new fabric.Canvas2dFilterBackend());
   }
 };
+
+export { fabric };

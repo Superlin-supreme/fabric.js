@@ -44,7 +44,7 @@
     skewX:                    0,
     skewY:                    0,
     charSpacing:              0,
-    styles:                   { },
+    styles:                   [],
     strokeUniform:            false,
     path:                     null,
     direction:                'ltr',
@@ -131,22 +131,38 @@
     });
 
     QUnit.test('toObject', function(assert) {
-      var styles = {
+      var stylesObject = {
         0: {
           0: { fill: 'red' },
           1: { textDecoration: 'underline' }
         }
       };
+      var stylesArray = [
+        {
+          start: 0,
+          end: 1,
+          style: { fill: 'red' }
+        },
+        {
+          start: 1,
+          end: 2,
+          style: { textDecoration: 'underline' }
+        }
+      ];
       var iText = new fabric.IText('test', {
-        styles: styles
+        styles: stylesObject
       });
       assert.equal(typeof iText.toObject, 'function');
       var obj = iText.toObject();
-      assert.deepEqual(obj.styles, styles);
-      assert.notEqual(obj.styles[0], styles[0]);
-      assert.notEqual(obj.styles[0][1], styles[0][1]);
-      assert.deepEqual(obj.styles[0], styles[0]);
-      assert.deepEqual(obj.styles[0][1], styles[0][1]);
+      assert.deepEqual(obj.styles, stylesArray);
+      assert.notEqual(obj.styles[0], stylesArray[0]);
+      assert.notEqual(obj.styles[1], stylesArray[1]);
+      assert.notEqual(obj.styles[0].style, stylesArray[0].style);
+      assert.notEqual(obj.styles[1].style, stylesArray[1].style);
+      assert.deepEqual(obj.styles[0], stylesArray[0]);
+      assert.deepEqual(obj.styles[1], stylesArray[1]);
+      assert.deepEqual(obj.styles[0].style, stylesArray[0].style);
+      assert.deepEqual(obj.styles[1].style, stylesArray[1].style);
     });
 
     QUnit.test('setSelectionStart', function(assert) {
@@ -299,10 +315,17 @@
       assert.deepEqual(_savedProps, iText._savedProps, 'iText saves a copy of important props');
       assert.equal(iText.selectable, false, 'selectable is set to false');
       assert.equal(iText.hasControls, false, 'hasControls is set to false');
+      assert.equal(iText.lockMovementX, true, 'lockMovementX is set to true');
+      assert.equal(iText._savedProps.lockMovementX, false, 'lockMovementX is set to false originally');
+      iText.set({ hasControls: true, lockMovementX: true });
+      assert.equal(iText.hasControls, false, 'hasControls is still set to false');
+      assert.equal(iText._savedProps.lockMovementX, true, 'lockMovementX should have been set to true');
       iText.exitEditing();
+      assert.ok(!iText._savedProps, 'removed ref');
       iText.abortCursorAnimation();
       assert.equal(iText.selectable, true, 'selectable is set back to true');
       assert.equal(iText.hasControls, true, 'hasControls is set back to true');
+      assert.equal(iText.lockMovementX, true, 'lockMovementX is set back to true, after changing saved props');
       iText.selectable = false;
       iText.enterEditing();
       iText.exitEditing();
