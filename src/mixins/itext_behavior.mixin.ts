@@ -806,7 +806,7 @@ import { removeFromArray } from '../util/internals';
       if (!this.inCompositionMode) {
         this.selectionStart = newSelection.selectionStart;
       }
-      // 更新 hiddenTextarea 位置
+      // 更新 hiddenTextarea 位置，为了完美模拟输入法样式
       this.updateTextareaPosition();
     },
 
