@@ -84,6 +84,7 @@
     },
 
     /**
+     * 实现双击、三击选中整行
      * Initializes double and triple click event handlers
      */
     initClicks: function() {
@@ -108,9 +109,11 @@
 
       if (this.selected) {
         this.inCompositionMode = false;
+        // 设置 cursor 光标位置
         this.setCursorByClick(options.e);
       }
 
+      // 如果文本框已经是编辑态，重新渲染光标
       if (this.isEditing) {
         this.__selectionStartOnMouseDown = this.selectionStart;
         if (this.selectionStart === this.selectionEnd) {
@@ -134,6 +137,8 @@
       this.selected = this === this.canvas._activeObject;
       // text dragging logic
       var newSelection = this.getSelectionStartFromPointer(options.e);
+      
+      // 判断 mousedown 是否落在选中的编辑态文字上
       this.__isDragging = this.isEditing && newSelection >= this.selectionStart && newSelection <= this.selectionEnd
         && this.selectionStart < this.selectionEnd;
     },
@@ -179,6 +184,7 @@
       if (this.__lastSelected && !this.__corner) {
         this.selected = false;
         this.__lastSelected = false;
+        // 从这里开始进入编辑模式
         this.enterEditing(options.e);
         if (this.selectionStart === this.selectionEnd) {
           this.initDelayedCursor(true);

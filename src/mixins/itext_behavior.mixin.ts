@@ -424,7 +424,7 @@ import { removeFromArray } from '../util/internals';
         return;
       }
 
-      // console.log('[mouseMoveHandler] options: ', options);
+      console.log('[mouseMoveHandler] options: ', options);
 
       var newSelectionStart = this.getSelectionStartFromPointer(options.e),
           currentStart = this.selectionStart,

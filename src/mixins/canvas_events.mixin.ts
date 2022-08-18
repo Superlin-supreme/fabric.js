@@ -881,6 +881,7 @@
 
       if (target) {
         var alreadySelected = target === this._activeObject;
+        // 如果 object 的 activeOn 的值是 down，则 mousedown 的时候这个 object 会被激活
         if (target.selectable && target.activeOn === 'down') {
           this.setActiveObject(target, e);
         }
@@ -889,6 +890,8 @@
           fabric.util.isTouchEvent(e)
         );
         target.__corner = corner;
+
+        // 处理手柄的 mousedown 事件，如果该手柄存在 mouseDownHandler，则执行它
         if (target === this._activeObject && (corner || !shouldGroup)) {
           this._setupCurrentTransform(e, target, alreadySelected);
           var control = target.controls[corner],

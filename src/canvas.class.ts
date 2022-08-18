@@ -210,6 +210,10 @@ import { Point } from './point.class';
     selectionKey:           'shiftKey',
 
     /**
+     * 和 preserveObjectStacking 一起用，控制在底层图层被激活时
+     * 重叠顶层图层是否能选中，如果 preserveObjectStacking 为 true
+     * 而且 altSelectionKey 被指定且激活
+     * 则顶层图层不能被选中
      * Indicates which key enable alternative selection
      * in case of target overlapping with active object
      * values: 'altKey', 'shiftKey', 'ctrlKey'.
@@ -337,6 +341,7 @@ import { Point } from './point.class';
     isDrawingMode:          false,
 
     /**
+     * 控制被选中激活的图层是否置顶，默认置顶，设置为 true 则将图层保持在原本的 stack
      * Indicates whether objects should remain in current stack position when selected.
      * When false objects are brought to top and rendered as part of the selection group
      * @type Boolean
@@ -841,27 +846,32 @@ import { Point } from './point.class';
       var ignoreZoom = true,
           pointer = this.getPointer(e, ignoreZoom),
           activeObject = this._activeObject,
+          // 所有被选中激活的 object
           aObjects = this.getActiveObjects(),
           activeTarget, activeTargetSubs,
           isTouch = isTouchEvent(e),
+          // 判断目前被选中的有两个或两个以上，而且不跳过群组，或者只有一个被选中
           shouldLookForActive = (aObjects.length > 1 && !skipGroup) || aObjects.length === 1;
-
       // first check current group (if one exists)
       // active group does not check sub targets like normal groups.
       // if active group just exits.
       this.targets = [];
-
+      // 命中手柄情况
+      // 如果是选中处于激活态的群组或者单个 object, 且 pointer 命中手柄则返回手柄所在的 object
       // if we hit the corner of an activeObject, let's return that.
       if (shouldLookForActive && activeObject._findTargetCorner(pointer, isTouch)) {
         return activeObject;
       }
+      // 以下是非手柄的情况
+      // 命中激活态的群组非手柄，返回群组 object
       if (aObjects.length > 1 && activeObject.type === 'activeSelection'
         && !skipGroup && this.searchPossibleTargets([activeObject], pointer)) {
         return activeObject;
       }
+      // 命中激活态的非群组非手柄，返回 object
       if (aObjects.length === 1 &&
         activeObject === this.searchPossibleTargets([activeObject], pointer)) {
-        if (!this.preserveObjectStacking) {
+          if (!this.preserveObjectStacking) {
           return activeObject;
         }
         else {
@@ -871,6 +881,7 @@ import { Point } from './point.class';
         }
       }
       var target = this.searchPossibleTargets(this._objects, pointer);
+
       if (e[this.altSelectionKey] && target && activeTarget && target !== activeTarget) {
         target = activeTarget;
         this.targets = activeTargetSubs;
