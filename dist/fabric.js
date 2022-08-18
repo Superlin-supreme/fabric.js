@@ -10232,6 +10232,10 @@ Object.assign(fabric, {
          */
         selectionKey: 'shiftKey',
         /**
+         * 和 preserveObjectStacking 一起用，控制在底层图层被激活时
+         * 重叠顶层图层是否能选中，如果 preserveObjectStacking 为 true
+         * 而且 altSelectionKey 被指定且激活
+         * 则顶层图层不能被选中
          * Indicates which key enable alternative selection
          * in case of target overlapping with active object
          * values: 'altKey', 'shiftKey', 'ctrlKey'.
@@ -10343,6 +10347,7 @@ Object.assign(fabric, {
          */
         isDrawingMode: false,
         /**
+         * 控制被选中激活的图层是否置顶，默认置顶，设置为 true 则将图层保持在原本的 stack
          * Indicates whether objects should remain in current stack position when selected.
          * When false objects are brought to top and rendered as part of the selection group
          * @type Boolean
@@ -10765,19 +10770,28 @@ Object.assign(fabric, {
             if (this.skipTargetFind) {
                 return;
             }
-            var ignoreZoom = true, pointer = this.getPointer(e, ignoreZoom), activeObject = this._activeObject, aObjects = this.getActiveObjects(), activeTarget, activeTargetSubs, isTouch = isTouchEvent(e), shouldLookForActive = (aObjects.length > 1 && !skipGroup) || aObjects.length === 1;
+            var ignoreZoom = true, pointer = this.getPointer(e, ignoreZoom), activeObject = this._activeObject, 
+            // 所有被选中激活的 object
+            aObjects = this.getActiveObjects(), activeTarget, activeTargetSubs, isTouch = isTouchEvent(e), 
+            // 判断目前被选中的有两个或两个以上，而且不跳过群组，或者只有一个被选中
+            shouldLookForActive = (aObjects.length > 1 && !skipGroup) || aObjects.length === 1;
             // first check current group (if one exists)
             // active group does not check sub targets like normal groups.
             // if active group just exits.
             this.targets = [];
+            // 命中手柄情况
+            // 如果是选中处于激活态的群组或者单个 object, 且 pointer 命中手柄则返回手柄所在的 object
             // if we hit the corner of an activeObject, let's return that.
             if (shouldLookForActive && activeObject._findTargetCorner(pointer, isTouch)) {
                 return activeObject;
             }
+            // 以下是非手柄的情况
+            // 命中激活态的群组非手柄，返回群组 object
             if (aObjects.length > 1 && activeObject.type === 'activeSelection'
                 && !skipGroup && this.searchPossibleTargets([activeObject], pointer)) {
                 return activeObject;
             }
+            // 命中激活态的非群组非手柄，返回 object
             if (aObjects.length === 1 &&
                 activeObject === this.searchPossibleTargets([activeObject], pointer)) {
                 if (!this.preserveObjectStacking) {
@@ -12079,11 +12093,13 @@ Object.assign(fabric, {
             }
             if (target) {
                 var alreadySelected = target === this._activeObject;
+                // 如果 object 的 activeOn 的值是 down，则 mousedown 的时候这个 object 会被激活
                 if (target.selectable && target.activeOn === 'down') {
                     this.setActiveObject(target, e);
                 }
                 var corner = target._findTargetCorner(this.getPointer(e, true), fabric.util.isTouchEvent(e));
                 target.__corner = corner;
+                // 处理手柄的 mousedown 事件，如果该手柄存在 mouseDownHandler，则执行它
                 if (target === this._activeObject && (corner || !shouldGroup)) {
                     this._setupCurrentTransform(e, target, alreadySelected);
                     var control = target.controls[corner], pointer = this.getPointer(e), mouseDownHandler = control && control.getMouseDownHandler(e, target, control);
@@ -25911,7 +25927,7 @@ function copyGLTo2DPutImageData(gl, pipelineState) {
             if (!this.__isMousedown || !this.isEditing) {
                 return;
             }
-            // console.log('[mouseMoveHandler] options: ', options);
+            console.log('[mouseMoveHandler] options: ', options);
             var newSelectionStart = this.getSelectionStartFromPointer(options.e), currentStart = this.selectionStart, currentEnd = this.selectionEnd;
             if ((newSelectionStart !== this.__selectionStartOnMouseDown || currentStart === currentEnd)
                 &&
@@ -26748,6 +26764,7 @@ function copyGLTo2DPutImageData(gl, pipelineState) {
             this.selectLine(this.getSelectionStartFromPointer(options.e));
         },
         /**
+         * 实现双击、三击选中整行
          * Initializes double and triple click event handlers
          */
         initClicks: function () {
@@ -26769,8 +26786,10 @@ function copyGLTo2DPutImageData(gl, pipelineState) {
             this.__isMousedown = true;
             if (this.selected) {
                 this.inCompositionMode = false;
+                // 设置 cursor 光标位置
                 this.setCursorByClick(options.e);
             }
+            // 如果文本框已经是编辑态，重新渲染光标
             if (this.isEditing) {
                 this.__selectionStartOnMouseDown = this.selectionStart;
                 if (this.selectionStart === this.selectionEnd) {
@@ -26793,6 +26812,7 @@ function copyGLTo2DPutImageData(gl, pipelineState) {
             this.selected = this === this.canvas._activeObject;
             // text dragging logic
             var newSelection = this.getSelectionStartFromPointer(options.e);
+            // 判断 mousedown 是否落在选中的编辑态文字上
             this.__isDragging = this.isEditing && newSelection >= this.selectionStart && newSelection <= this.selectionEnd
                 && this.selectionStart < this.selectionEnd;
         },
@@ -26833,6 +26853,7 @@ function copyGLTo2DPutImageData(gl, pipelineState) {
             if (this.__lastSelected && !this.__corner) {
                 this.selected = false;
                 this.__lastSelected = false;
+                // 从这里开始进入编辑模式
                 this.enterEditing(options.e);
                 if (this.selectionStart === this.selectionEnd) {
                     this.initDelayedCursor(true);

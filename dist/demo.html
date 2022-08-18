@@ -17,6 +17,8 @@
 <canvas id="canvas" width="800" height="230"></canvas>
 <script>
 const canvas = new fabric.Canvas('canvas');
+canvas.altSelectionKey = 'shiftKey'
+// canvas.preserveObjectStacking = true
 const O2TextStyle = { fontWeight: 'bold', fill: '#ffffff' };
 
 // 搞个正方形，基本上是封装了 canvas 的 fillRect
